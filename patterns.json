@@ -1,7 +1,8 @@
 {
    "updated": "2022-01-08",
    "author": "Samuel koo & Daniel Koo brothers",
-   "patterns": [{
+   "patterns": [
+      {
          "use": true,
          "type": "MobileNumber",
          "expression": "010-?([0-9]{3,4})-?([0-9]{4})"
@@ -29,12 +30,37 @@
       {
          "use": true,
          "type": "RoadAddress",
-         "expression": "/(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d]+)/"
+         "expression": "(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d]+)"
+      },
+      {
+         "use": true,
+         "type": "RoadAddress1",
+         "expression": "((?!상가)[가-힣])+(\\d{1,5}|(\\d{1,5}[가-힣,]+\\d{1,5})?)(읍|면|동|가)"
+      },
+      {
+         "use": true,
+         "type": "RoadAddress2",
+         "expression": "[가-힣A-Za-z·\\d~\\-\\.]+(로|길)"
       },
       {
          "use": true,
          "type": "CreditCardtNumber",
          "expression": "(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5})"
+      },
+      {
+         "use": false,
+         "type": "MasterCardtNumber",
+         "expression": "5[1-5]\\d{14}"
+      },
+      {
+         "use": false,
+         "type": "VisaCardtNumber",
+         "expression": "4\\d{12}(\\d{3})?"
+      },
+      {
+         "use": false,
+         "type": "AmexCardtNumber",
+         "expression": "3[47]\\d{13}"
       },
       {
          "use": true,
@@ -45,6 +71,16 @@
          "use": false,
          "type": "BankAccountNumber",
          "expression": "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"
+      },
+      {
+         "use": false,
+         "type": "IPV4Address",
+         "expression": "(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}"
+      },
+      {
+         "use": true,
+         "type": "MacAddress",
+         "expression": "([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}"
       },
       {
          "use": false,
