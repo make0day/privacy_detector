@@ -68,6 +68,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Coded by Samuel Koo & Daniel Koo")
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
+
+        # 1 = Single Scan, 2 = Recursive PII Scan, 3 = Full Scan (All Mime Type)
+        self.__scanningLevel = 1
+
         try:
             #Loads patterns file
             self.__stdout.println("[+] Load PII patters from json file...")
@@ -149,7 +153,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     
     def getUiComponent(self):
         return self._splitpane
-        
+    
+
+    def AddLogEntry(self, tool, requestResponse, url, matched, piitype, method):
+        # create a new log entry with the message details
+        self._lock.acquire()
+        row = self._log.size()
+        self._log.add(LogEntry(tool, requestResponse, url, matched, piitype, method))
+        self.fireTableRowsInserted(row, row)
+        self._lock.release()
+        return
 
     #
     # implement IHttpListener
@@ -191,8 +204,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
-                        #Check content type one of json types
-                        if mimeType == 'json':
+                        #Check content type one of json types or scanningLevel == 3
+                        if self.__scanningLevel == 3 or mimeType == 'json':
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse())
@@ -210,24 +223,28 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             #self.__stdout.println("responseLength = {}".format(responseLength))
 
                             if responseLength != '':
-
                                 if httpProxyItemResponse.getBodyOffset() != 0:
                                     responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
 
                                 #self.__stdout.println(responseBody)
-
+ 
                                 for regex in self.__regexs.keys():
-                                    matchobj = regex.search(responseBody)
-                                    if matchobj != None:
-                                        #self.__stdout.println(Path)
-                                        matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
-                                        #self.__stdout.println("Matched = {} ".format(matched))
-                                        # create a new log entry with the message details
-                                        self._lock.acquire()
-                                        row = self._log.size()
-                                        self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod()))
-                                        self.fireTableRowsInserted(row, row)
-                                        self._lock.release()
+                                    if self.__scanningLevel == 1:
+                                        matchobj = regex.search(responseBody)
+                                        if matchobj != None:
+                                            matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                                            self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
+                                    elif self.__scanningLevel > 1:
+                                        matchObj_iter = regex.finditer(responseBody)
+                                        if matchObj_iter != None:
+                                            for matchobj in matchObj_iter:
+                                                matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                                                self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
+
+                                       
+                                                #self.__stdout.println("Matched = {} ".format(matched))
+                                
+
         except Exception as e:
             self.__stdout.println(e)
     

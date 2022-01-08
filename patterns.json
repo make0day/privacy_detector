@@ -9,6 +9,11 @@
       },
       {
          "use": true,
+         "type": "PhoneNumber",
+         "expression": "0[2-6][1-5]?-[2-9]\\d{2,3}-\\d{4}"
+      },
+      {
+         "use": true,
          "type": "EmailAddress",
          "expression": "([a-z0-9_\\.-]{1,10})@([\\da-z\\.-]+)\\.([^pjg]{1}[a-z\\.]{2,6})"
       },
@@ -28,17 +33,17 @@
          "expression": "([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}"
       },
       {
-         "use": true,
+         "use": false,
          "type": "RoadAddress",
          "expression": "(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d]+)"
       },
       {
-         "use": true,
+         "use": false,
          "type": "RoadAddress1",
          "expression": "((?!상가)[가-힣])+(\\d{1,5}|(\\d{1,5}[가-힣,]+\\d{1,5})?)(읍|면|동|가)"
       },
       {
-         "use": true,
+         "use": false,
          "type": "RoadAddress2",
          "expression": "[가-힣A-Za-z·\\d~\\-\\.]+(로|길)"
       },
@@ -46,6 +51,11 @@
          "use": true,
          "type": "CreditCardtNumber",
          "expression": "(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5})"
+      },
+      {
+         "use": true,
+         "type": "CreditCardtNumber2",
+         "expression": "[34569][0-9]{3}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4}"
       },
       {
          "use": false,
@@ -68,9 +78,19 @@
          "expression": "(\\d{2}-\\d{2}-\\d{6}-\\d{2})"
       },
       {
+         "use": true,
+         "type": "DriverLicenseNumber2",
+         "expression": "[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9]{2}"
+      },
+      {
          "use": false,
          "type": "BankAccountNumber",
          "expression": "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"
+      },
+      {
+         "use": true,
+         "type": "BankAccountNumber2",
+         "expression": "([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6})"
       },
       {
          "use": false,
