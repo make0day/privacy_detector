@@ -80,13 +80,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         
         return
 
-
-    #def createNewInstance(self, controller, editable):
-    #    return DisplayValues(self, controller, editable)
-
-    #
-    # implement ITab
-    #
     
     def getTabCaption(self):
         return "Privacy Detector"
@@ -94,27 +87,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def getUiComponent(self):
         return self._splitpane
         
-    '''def isEnabled(self, content, isRequest):
-        if isRequest == True:
-            re = self._extender._helpers.analyzeRequest(content)
-        else:
-            re = self._extender._helpers.analyzeResponse(content)
-            
-        for header in re.getHeaders():
-          if header.lower().startswith("content-type:"):
-            content_type = header.split(":")[1].lower()
 
-            for allowedType in ContentTypes:
-              if content_type.find(allowedType) > 0:
-                extdata = content[re.getBodyOffset():].tostring()
-                try:
-                        #self._decodedAuthorizationHeader = jsbeautifier.beautify(extdata)
-                except Exception as e:
-                        print(e)
-                        self._decodedAuthorizationHeader = "Unable to beatify. Please check extender logs."
-                return True    
-        return False
-    ''' 
     #
     # implement IHttpListener
     #
@@ -158,62 +131,37 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                     # Do not anything if http status code is one of error type
                     if httpProxyItemResponse.getStatusCode() not in [401, 402, 403, 404, 405, 500, 502]:
-
                         #Get mime type of HTTP response
                         mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                         if mimeType == "":
                             mimeType = httpProxyItemResponse.getInferredMimeType().lower()
-                            if mimeType == "":
-                                for header in httpProxyItemResponse.getHeaders():
-                                     if header.lower().startswith("content-type:"):
-                                         mimeType = header.split(":")[1].lower()
 
                         self.__stdout.println("mimeType = {}".format(mimeType))
 
                         #Check content type one of json types
                         if mimeType == 'json':
-                        for allowedType in ContentTypes:
-                            if mimeType.find(allowedType) > 0:
-                                self.__stdout.println("test1 - {}".format(allowedType))
 
+                            #Get the response body
+                            responseBody = httpProxyItemResponse.toString()
 
-                        self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl()))
-           # if httpProxyItemResponse.getStatusCode() == 200:
+                            responseLength = ''
+                            #Get header length
+                            for header in httpProxyItemResponse.getHeaders():
+                                if header.lower().startswith("content-length:"):
+                                    responseLength = header.split(":")[1].lower()
+                                    break
 
+                            if responseLength == '':
+                                responseLength = len(responseBody)
 
-                #self.__stdout.println(Host)
-                #RequestUrl = self._helpers.analyzeRequest(messageInfo).getUrl()
-                #Path = RequestUrl[len(Host) + len(Protocol) + 3:]
-                #self.__stdout.println(Path)
-            #UrlPath = URL.from_string('https://github.com/minwook-shin')
-            #self.__stdout.println(UrlPath.getPath())
+                            self.__stdout.println("responseLength = {}".format(responseLength))
+
+                            if responseLength != '':
+                                self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl()))
+          
         except Exception as e:
             self.__stdout(e)
-        #ResponseBody = messageInfo.getResponse().tostring()
-
-        #self.__stdout.println(RequestUrl)
-
-        #stdout.println(ResponseBody)
-        #self.__stdout.println("dual5651")
-        #self.__stdout.println(URL(RequestUrl).getPath())
-        #if (RequestUrl != None):
-
-           # self.__stdout.println(URL(RequestUrl).getPath())
-            #httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
-
-           # if httpProxyItemResponse.getStatusCode() == 200:
-        '''
-            mimeType = httpProxyItemResponse.getStatedMimeType().toUpperCase()
-            self.__stdout.println(mimeType)
-            # try to get the mime type from body instead of header
-            if (mimeType == ""):
-                mimeType = httpProxyItemResponse.getInferredMimeType().toUpperCase()
-            
-
-            if (isValidMimeType(mimeType)):
-                # convert from bytes to string the body of the request
-                responseBody = messageInfo.getResponse()
-        '''
+    
         self.fireTableRowsInserted(row, row)
         self._lock.release()
 
@@ -232,7 +180,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
     def getColumnName(self, columnIndex):
         if columnIndex == 0:
-            return "Tool"
+            return "Source"
         if columnIndex == 1:
             return "URL"
         return ""
