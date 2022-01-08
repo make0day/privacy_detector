@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#coding=utf8
 #
 #     
 #                    Privacy Detector Project
@@ -16,9 +18,9 @@
 #
 #
 #
-
+import sys
+import os
 import json
-import os 
 import re
 from burp import IBurpExtender
 from burp import ITab
@@ -41,16 +43,7 @@ from java.util.regex import *
 from java.lang import *
 from datetime import datetime
 
-'''
-class PII(Enum):
-    DriverLicenseNo = 1
-    BankAccountNo = 2
-    PassportNo = 3
-    IpAddress = 4
-    HomeAddress = 5
-    MobileNo = 6
-    PhoneNo = 7
-'''
+
 
 class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController, AbstractTableModel):
     
@@ -68,18 +61,18 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         # set our extension name
         callbacks.setExtensionName("Privacy Detector")
 
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)       
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.setCharacterEncoding("UTF-8")  
 
         self.__stdout.println("Privacy Detector Loaded")
         self.__stdout.println("Coded by Samuel Koo & Daniel Koo")
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
-
         try:
             #Loads patterns file
             self.__stdout.println("[+] Load PII patters from json file...")
             f = open("./patterns.json", "r")
-            keys = f.read().encode('utf8')
+            keys = f.read().decode('utf-8')
             patternFile = json.loads(keys)
             f.close()
 
@@ -87,8 +80,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__regexs = dict()
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf8')))
-                    self.__regexs[(re.compile(pattern['expression']))] = pattern['type']
+                    self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
+                    self.__regexs[(re.compile(pattern['expression'].encode('utf-8')))] = pattern['type']
         except Exception as e:
             self.__stdout.println(e)
         
@@ -98,7 +91,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # main split pane
         self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        self._splitpane.setResizeWeight(0.5)
+        #self._splitpane.setResizeWeight(0.2)
 
         # table of log entries
         logTable = Table(self)
@@ -182,6 +175,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 #if Path.lower() != '/api/v2/api-docs': #Path.lower().startswith("/api/"):
                 #self.__stdout.println(toolFlag)
 
+                #From Proxy
                 if toolFlag == 4:
 
 
@@ -226,8 +220,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                     matchobj = regex.search(responseBody)
                                     if matchobj != None:
                                         #self.__stdout.println(Path)
-                                        matched = matchobj.group()
-                                        self.__stdout.println("Matched = {} ".format(matched))
+                                        matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                                        #self.__stdout.println("Matched = {} ".format(matched))
                                         # create a new log entry with the message details
                                         self._lock.acquire()
                                         row = self._log.size()
