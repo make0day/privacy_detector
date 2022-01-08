@@ -1,3 +1,22 @@
+#
+#     
+#                    Privacy Detector Project
+#
+#                           
+#                           https://github.com/make0day/privacy_detector
+#
+#
+#     
+#                        Coded by Samuel Koo ( 0day@kakao.com )
+#
+#                                   and
+#
+#                                 Daniel Koo ( reby7146@me.com )
+#
+#
+#
+#
+
 import json
 import os 
 import re
@@ -168,7 +187,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 '''
 
                 # if only path starts with '/api/'
-                if Path.lower().startswith("/api/"):
+                if Path.lower() != '/api/v2/api-docs': #Path.lower().startswith("/api/"):
 
                     #self.__stdout.println(Path)
 
@@ -216,8 +235,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                 for regex in self.__regexs.keys():
                                     matchobj = regex.search(responseBody)
                                     if matchobj != None:
-                                        self.__stdout.println(Path)
-                                        self.__stdout.println("Matched = {}".format(matchobj.group()))
+                                        #self.__stdout.println(Path)
+                                        #self.__stdout.println("Matched = {}".format(matchobj.group()))
                                         self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matchobj.group(), self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod()))
           
         except Exception as e:

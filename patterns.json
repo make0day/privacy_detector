@@ -4,17 +4,22 @@
    "patterns": [{
          "use": true,
          "type": "MobileNumber",
-         "expression": "01([0|1|6|7|8|9]?)-?([0-9]{3,4})-?([0-9]{4})"
+         "expression": "010-?([0-9]{3,4})-?([0-9]{4})"
       },
       {
          "use": true,
          "type": "EmailAddress",
-         "expression": "[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+"
+         "expression": "([a-z0-9_\\.-]+)@([\\da-z\\.-]+)\\.([a-z\\.]{2,6})"
       },
       {
          "use": true,
          "type": "ResidentRegistrationNumber",
          "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))\\W?([1-8]\\d{6})"
+      },
+      {
+         "use": true,
+         "type": "BusinessRegistrationNumber",
+         "expression": "(\d{3,3})+[-]+(\d{2,2})+[-]+(\d{5,5})"
       },
       {
          "use": true,
@@ -45,6 +50,31 @@
          "use": true,
          "type": "ForeinerRegistrationNumber",
          "expression": "([01][0-9]{5}[[:space:]~-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})"
+      },
+      {
+         "use": false,
+         "type": "AWSSessionToken",
+         "expression": "(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=])"
+      },
+      {
+         "use": false,
+         "type": "AWSSecretKey",
+         "expression": "(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"
+      },
+      {
+         "use": false,
+         "type": "PrivateSecureKey",
+         "expression": "-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY"
+      },
+      {
+         "use": false,
+         "type": "GoogleOAuthToken",
+         "expression": "ya29\\.[0-9A-Za-z\\\\-_]+"
+      },
+      {
+         "use": false,
+         "type": "GoogleOAuthKey",
+         "expression": "[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com"
       }
    ]
 }
