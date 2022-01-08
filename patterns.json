@@ -14,7 +14,7 @@
       {
          "use": true,
          "type": "ResidentRegistrationNumber",
-         "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-?([1-4]\\d{6})"
+         "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))\\W?([1-8]\\d{6})"
       },
       {
          "use": true,
@@ -24,7 +24,27 @@
       {
          "use": true,
          "type": "CreditCardtNumber",
-         "expression": "(([3-6]|9)\\d{3}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{4}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{4}(-|.|\\||\\\\|\\&|\\^|\\@)?(\\d{4}|\\d{3})|37\\d{2}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{6}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{5})"
+         "expression": "(([3-6]|9)\\d{3}\\W?\\d{4}\\W?\\d{4}\\W?(\\d{4}|\\d{3})|37\\d{2}\\W?\\d{6}\\W?\\d{5})"
+      },
+      {
+         "use": true,
+         "type": "DriverLicenseNumber",
+         "expression": "(\\d{2}-\\d{2}-\\d{6}-\\d{2})"
+      },
+      {
+         "use": false,
+         "type": "BankAccountNumber",
+         "expression": "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"
+      },
+      {
+         "use": true,
+         "type": "NationalInsuranceNumber",
+         "expression": "[1257][-~.[:space:]][0-9]{10}"
+      },
+      {
+         "use": true,
+         "type": "ForeinerRegistrationNumber",
+         "expression": "([01][0-9]{5}[[:space:]~-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})"
       }
    ]
 }

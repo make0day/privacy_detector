@@ -1,3 +1,6 @@
+import json
+import os 
+import re
 from burp import IBurpExtender
 from burp import ITab
 from burp import IHttpListener
@@ -14,13 +17,9 @@ from javax.swing import JTable;
 from javax.swing import SwingUtilities;
 from javax.swing.table import AbstractTableModel;
 from threading import Lock
-             
-import re
 from java.net import URL
 from java.util.regex import *
 from java.lang import *
-import json
-import os
 from datetime import datetime
 
 '''
@@ -57,7 +56,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         try:
             #Loads patterns file
             f = open("./patterns.json", "r")
-            patternFile = json.load(f)
+            keys = f.read().encode('utf8')
+            patternFile = json.loads(keys)
             f.close()
 
             #precompile regex patterns for better performance
