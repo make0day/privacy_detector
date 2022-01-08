@@ -14,17 +14,17 @@
       {
          "use": true,
          "type": "ResidentRegistrationNumber",
-         "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))\\W?([1-8]\\d{6})"
+         "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-?([1-4]\\d{6})"
       },
       {
          "use": true,
          "type": "BusinessRegistrationNumber",
-         "expression": "(\d{3,3})+[-]+(\d{2,2})+[-]+(\d{5,5})"
+         "expression": "(\\d{3,3})+[-]+(\\d{2,2})+[-]+(\\d{5,5})"
       },
       {
          "use": true,
          "type": "PassportNumber",
-         "expression": "([a-zA-Z]{1}|[a-zA-Z]{2})\\d{8}"
+         "expression": "([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}"
       },
       {
          "use": true,
