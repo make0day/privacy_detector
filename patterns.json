@@ -28,6 +28,11 @@
       },
       {
          "use": true,
+         "type": "RoadAddress",
+         "expression": "/(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d]+)/"
+      },
+      {
+         "use": true,
          "type": "CreditCardtNumber",
          "expression": "(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5})"
       },
@@ -40,6 +45,11 @@
          "use": false,
          "type": "BankAccountNumber",
          "expression": "([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])"
+      },
+      {
+         "use": false,
+         "type": "accessKeyType1",
+         "expression": "([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})"
       },
       {
          "use": true,
@@ -58,6 +68,16 @@
       },
       {
          "use": false,
+         "type": "AWSAccessKey",
+         "expression": "AKIA[A-Za-z0-9/+=]{12}"
+      },
+      {
+         "use": false,
+         "type": "TencentSecretId",
+         "expression": "AKID[A-Za-z0-9]{34}"
+      },
+      {
+         "use": false,
          "type": "AWSSecretKey",
          "expression": "(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])"
       },
@@ -65,6 +85,21 @@
          "use": false,
          "type": "PrivateSecureKey",
          "expression": "-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY"
+      },
+      {
+         "use": false,
+         "type": "AuthorizationBasic",
+         "expression": "Basic\\s[a-zA-Z0-9+\\/]+\\=*"
+      },
+      {
+         "use": false,
+         "type": "AuthorizationBearer1",
+         "expression": "Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12}"
+      },
+      {
+         "use": false,
+         "type": "AuthorizationBearer2",
+         "expression": "Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?"
       },
       {
          "use": false,

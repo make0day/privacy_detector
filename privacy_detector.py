@@ -3,7 +3,7 @@
 #                    Privacy Detector Project
 #
 #                           
-#                           https://github.com/make0day/privacy_detector
+#                        Github : https://github.com/make0day/privacy_detector
 #
 #
 #     
@@ -71,9 +71,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)       
 
         self.__stdout.println("Privacy Detector Loaded")
+        self.__stdout.println("Coded by Samuel Koo & Daniel Koo")
+        self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
+
 
         try:
             #Loads patterns file
+            self.__stdout.println("[+] Load PII patters from json file...")
             f = open("./patterns.json", "r")
             keys = f.read().encode('utf8')
             patternFile = json.loads(keys)
@@ -83,6 +87,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__regexs = dict()
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
+                    self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf8')))
                     self.__regexs[(re.compile(pattern['expression']))] = pattern['type']
         except Exception as e:
             self.__stdout.println(e)
@@ -162,34 +167,23 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         if messageIsRequest:
             return
         
-        # create a new log entry with the message details
-        self._lock.acquire()
-        row = self._log.size()
 
         # the condition check if the inScope variable is true or false; in the first case it checks if the httpProxyItem respects the "in scope" condition
         try:
             if messageInfo != None:
                 #httpService = messageInfo.getHttpService()
-                Url = self._helpers.analyzeRequest(messageInfo).getUrl().toString()
                 #Host = httpService.getHost()
                 #Protocol = httpService.getProtocol()
                 #self.__stdout.println("test = {} {} {}".format(len(Host),len(Protocol),len(Url)))
 
-                Path = URL(Url).getPath()
-                '''
-                    Cases : 
-                                /api/v1/
-                                /api/v2/
-                                /api/v3/
-                                /api/v4/
-                                /api/hello
-                                /api/users/me
-                '''
-
                 # if only path starts with '/api/'
-                if Path.lower() != '/api/v2/api-docs': #Path.lower().startswith("/api/"):
+                #Url = self._helpers.analyzeRequest(messageInfo).getUrl().toString()
+                #Path = URL(Url).getPath()
+                #if Path.lower() != '/api/v2/api-docs': #Path.lower().startswith("/api/"):
+                #self.__stdout.println(toolFlag)
 
-                    #self.__stdout.println(Path)
+                if toolFlag == 4:
+
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
@@ -223,27 +217,26 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                             if responseLength != '':
 
-                                #responseheaderLength = len(httpProxyItemResponse.getHeaders().toString())
-                                #if responseLength < responseheaderLength:
                                 if httpProxyItemResponse.getBodyOffset() != 0:
                                     responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
 
                                 #self.__stdout.println(responseBody)
-                                #self.__stdout.println("bodyLength = {}".format(responseLength))
-                                #self.__stdout.println("headerLength = {}".format(responseheaderLength))
 
                                 for regex in self.__regexs.keys():
                                     matchobj = regex.search(responseBody)
                                     if matchobj != None:
                                         #self.__stdout.println(Path)
-                                        #self.__stdout.println("Matched = {}".format(matchobj.group()))
-                                        self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matchobj.group(), self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod()))
-          
+                                        matched = matchobj.group()
+                                        self.__stdout.println("Matched = {} ".format(matched))
+                                        # create a new log entry with the message details
+                                        self._lock.acquire()
+                                        row = self._log.size()
+                                        self._log.add(LogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod()))
+                                        self.fireTableRowsInserted(row, row)
+                                        self._lock.release()
         except Exception as e:
             self.__stdout.println(e)
     
-        self.fireTableRowsInserted(row, row)
-        self._lock.release()
 
     #
     # extend AbstractTableModel
@@ -335,3 +328,6 @@ class LogEntry:
         self._piitype = piitype
         self._method = method
         self._time = datetime.now().strftime("%Y_%m_%d_%H:%M:%S")
+
+
+
