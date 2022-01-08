@@ -9,6 +9,7 @@ from java.util import List;
 from javax.swing import JScrollPane;
 from javax.swing import JSplitPane;
 from javax.swing import JTabbedPane;
+from javax.swing import JPanel;
 from javax.swing import JTable;
 from javax.swing import SwingUtilities;
 from javax.swing.table import AbstractTableModel;
@@ -20,6 +21,7 @@ from java.util.regex import *
 from java.lang import *
 import json
 import os
+from datetime import datetime
 
 '''
 class PII(Enum):
@@ -52,26 +54,38 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         self.__stdout.println("Privacy Detector Loaded")
 
-        #Loads patterns file
-        f = open("./patterns.json", "r")
-        patternFile = json.load(f)
-        f.close()
+        try:
+            #Loads patterns file
+            f = open("./patterns.json", "r")
+            patternFile = json.load(f)
+            f.close()
 
-        #precompile regex patterns for better performance
-        self.__regexs = dict()
-        for pattern in patternFile['patterns']:
-            if pattern['use'] == True:
-                self.__regexs[(re.compile(pattern['expression']))] = pattern['type']
+            #precompile regex patterns for better performance
+            self.__regexs = dict()
+            for pattern in patternFile['patterns']:
+                if pattern['use'] == True:
+                    self.__regexs[(re.compile(pattern['expression']))] = pattern['type']
+        except Exception as e:
+            self.__stdout.println(e)
         
         # create the log and a lock on which to synchronize when adding log entries
         self._log = ArrayList()
         self._lock = Lock()
-        
+
         # main split pane
         self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        
+        self._splitpane.setResizeWeight(0.5)
+
         # table of log entries
         logTable = Table(self)
+        logTable.setAutoResizeMode(Table.AUTO_RESIZE_OFF)
+        logTable.getColumnModel().getColumn(0).setPreferredWidth(50)
+        logTable.getColumnModel().getColumn(1).setPreferredWidth(100)
+        logTable.getColumnModel().getColumn(2).setPreferredWidth(700)
+        logTable.getColumnModel().getColumn(3).setPreferredWidth(300)
+        logTable.getColumnModel().getColumn(4).setPreferredWidth(300)
+        logTable.getColumnModel().getColumn(5).setPreferredWidth(200)
+
         scrollPane = JScrollPane(logTable)
         self._splitpane.setLeftComponent(scrollPane)
 
@@ -79,9 +93,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         tabs = JTabbedPane()
         self._requestViewer = callbacks.createMessageEditor(self, False)
         self._responseViewer = callbacks.createMessageEditor(self, False)
+
+        #panelRequest = JPanel()
+        #panelResponse = JPanel()
+
+        #panelRequest.add(self._requestViewer.getComponent())
+        #panelResponse.add(self._responseViewer.getComponent())
+
+        #self._splitbottompane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
+        #self._splitbottompane.setResizeWeight(0.5)
+
+        #self._splitbottompane.setLeftComponent(panelRequest)
+        #self._splitbottompane.setRightComponent(panelResponse)
+
         tabs.addTab("Request", self._requestViewer.getComponent())
         tabs.addTab("Response", self._responseViewer.getComponent())
         self._splitpane.setRightComponent(tabs)
+
+        #self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT, self._splitpane, self._splitbottompane);
         
         # customize our UI components
         callbacks.customizeUiComponent(self._splitpane)
@@ -208,19 +237,21 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             return 0
 
     def getColumnCount(self):
-        return 5
+        return 6
 
     def getColumnName(self, columnIndex):
         if columnIndex == 0:
             return "#"
         if columnIndex == 1:
-            return "URL"
-        if columnIndex == 2:
             return "Method"
+        if columnIndex == 2:
+            return "URL"
         if columnIndex == 3:
             return "Matched Pattern"
         if columnIndex == 4:
             return "PII Type"
+        if columnIndex == 5:
+            return "Time"
         return ""
 
     def getValueAt(self, rowIndex, columnIndex):
@@ -235,6 +266,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             return logEntry._matched
         if columnIndex == 4:
             return logEntry._piitype
+        if columnIndex == 5:
+            return logEntry._time
         return ""
 
     #
@@ -282,3 +315,4 @@ class LogEntry:
         self._matched = matched
         self._piitype = piitype
         self._method = method
+        self._time = datetime.now().strftime("%Y_%m_%d_%H:%M:%S")

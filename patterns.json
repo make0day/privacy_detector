@@ -1,6 +1,6 @@
 {
    "updated": "2022-01-08",
-   "author": "samuel koo",
+   "author": "Samuel koo & Daniel Koo brothers",
    "patterns": [{
          "use": true,
          "type": "MobileNumber",
@@ -10,6 +10,21 @@
          "use": true,
          "type": "EmailAddress",
          "expression": "[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+"
+      },
+      {
+         "use": true,
+         "type": "ResidentRegistrationNumber",
+         "expression": "((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-?([1-4]\\d{6})"
+      },
+      {
+         "use": true,
+         "type": "PassportNumber",
+         "expression": "([a-zA-Z]{1}|[a-zA-Z]{2})\\d{8}"
+      },
+      {
+         "use": true,
+         "type": "CreditCardtNumber",
+         "expression": "(([3-6]|9)\\d{3}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{4}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{4}(-|.|\\||\\\\|\\&|\\^|\\@)?(\\d{4}|\\d{3})|37\\d{2}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{6}(-|.|\\||\\\\|\\&|\\^|\\@)?\\d{5})"
       }
    ]
 }
