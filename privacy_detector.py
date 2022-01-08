@@ -28,7 +28,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._helpers = callbacks.getHelpers()
         
         # set our extension name
-        callbacks.setExtensionName("Custom logger")
+        callbacks.setExtensionName("Privacy Detector")
         
         # create the log and a lock on which to synchronize when adding log entries
         self._log = ArrayList()
@@ -69,7 +69,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
     
     def getTabCaption(self):
-        return "Logger"
+        return "Privacy Detector"
     
     def getUiComponent(self):
         return self._splitpane
