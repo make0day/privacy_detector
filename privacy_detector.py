@@ -15,9 +15,6 @@
 #
 #                                 Daniel Koo ( reby7146@me.com )
 #
-#
-#
-#
 import sys
 import os
 import json
@@ -42,12 +39,48 @@ from java.net import URL
 from java.util.regex import *
 from java.lang import *
 from datetime import datetime
-#import requests
 
 
 
 class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController, AbstractTableModel):
     
+    #
+    # Precompile Regex rulesets
+    #
+    def PrecompilePIIRuleSets(self, patternFile):
+        try:
+            #precompile regex patterns for better performance
+            self.__regexs = dict()
+            for pattern in patternFile['patterns']:
+                if pattern['use'] == True:
+                    #self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
+                    self.__regexs[(re.compile(pattern['expression'].encode('utf-8')))] = pattern['type']
+        except Exception as e:
+            self.__stdout.println(e)
+        return
+
+    #
+    # Load Ruleset file
+    #
+    def LoadRulesetFile(self):
+        patternFile = None
+        try:
+            #Loads patterns file
+            if os.path.exists("./patterns.json"):
+                f = open("./patterns.json", "r")
+            else:
+                #url = 'https://github.com/make0day/privacy_detector/blob/main/patterns.json'
+                #response = requests.get(url)
+                f = open("./patterns.json", "r")
+                #f.write(response.text)
+
+            keys = f.read().decode('utf-8')
+            patternFile = json.loads(keys)
+            f.close()
+        except Exception as e:
+            self.__stdout.println(e)
+        return patternFile
+
     #
     # implement IBurpExtender
     #
@@ -70,33 +103,17 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
 
-        # 1 = Fast Scan, 2 = Normal Scan, 3 = Full Scan
-        self.__scanningLevel = 1
-        self.__stdout.println("[+] Current Scanning Level is : {}".format(self.__scanningLevel))
+        # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
+        self.__scanningType = 1
+        self.__stdout.println("[+] Current Scanning Mime Type is : {}".format(self.__scanningType))
 
-        try:
-            #Loads patterns file
-            self.__stdout.println("[+] Load PII patters from json file...")
-            if os.path.exists("./patterns.json"):
-                f = open("./patterns.json", "r")
-            else:
-                #url = 'https://github.com/make0day/privacy_detector/blob/main/patterns.json'
-                #response = requests.get(url)
-                f = open("./patterns.json", "r")
-                #f.write(response.text)
+        # 1 = Find one item from the page, 1 > = Find all items
+        self.__scanningDepth = 2
+        self.__stdout.println("[+] Current Scanning Depth is : {}".format(self.__scanningDepth))
 
-            keys = f.read().decode('utf-8')
-            patternFile = json.loads(keys)
-            f.close()
-
-            #precompile regex patterns for better performance
-            self.__regexs = dict()
-            for pattern in patternFile['patterns']:
-                if pattern['use'] == True:
-                    #self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
-                    self.__regexs[(re.compile(pattern['expression'].encode('utf-8')))] = pattern['type']
-        except Exception as e:
-            self.__stdout.println(e)
+        self.__stdout.println("[+] Load PII patters from json file...")
+        patternFile = self.LoadRulesetFile()
+        self.PrecompilePIIRuleSets(patternFile)
         
         # create the log and a lock on which to synchronize when adding log entries
         self._log = ArrayList()
@@ -104,17 +121,18 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # main split pane
         self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        self._splitpane.setResizeWeight(0.5)
+        self._splitpane.setResizeWeight(0.2)
 
         # table of log entries
         logTable = Table(self)
         logTable.setAutoResizeMode(Table.AUTO_RESIZE_OFF)
         logTable.getColumnModel().getColumn(0).setPreferredWidth(50)
         logTable.getColumnModel().getColumn(1).setPreferredWidth(100)
-        logTable.getColumnModel().getColumn(2).setPreferredWidth(750)
-        logTable.getColumnModel().getColumn(3).setPreferredWidth(400)
+        logTable.getColumnModel().getColumn(2).setPreferredWidth(350)
+        logTable.getColumnModel().getColumn(3).setPreferredWidth(550)
         logTable.getColumnModel().getColumn(4).setPreferredWidth(350)
-        logTable.getColumnModel().getColumn(5).setPreferredWidth(200)
+        logTable.getColumnModel().getColumn(5).setPreferredWidth(300)
+        logTable.getColumnModel().getColumn(6).setPreferredWidth(250)
 
         scrollPane = JScrollPane(logTable)
         self._splitpane.setLeftComponent(scrollPane)
@@ -137,8 +155,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         #tabs.addTab("Response", self._responseViewer.getComponent())
         #self._splitpane.setRightComponent(tabs)
         self._splitpane.setRightComponent(self._responseViewer.getComponent())
-
-        #self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT, self._splitpane, self._splitbottompane);
         
         # customize our UI components
         callbacks.customizeUiComponent(self._splitpane)
@@ -162,13 +178,54 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         return self._splitpane
     
 
-    def AddLogEntry(self, tool, requestResponse, url, matched, piitype, method):
+    def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
         # create a new log entry with the message details
         self._lock.acquire()
         row = self._log.size()
-        self._log.add(LogEntry(tool, requestResponse, url, matched, piitype, method))
+        self._log.add(LogEntry(tool, requestResponse, host, path, matched, piitype, method))
         self.fireTableRowsInserted(row, row)
         self._lock.release()
+        return
+
+
+    def PIIProcessor(self, toolFlag, responseBody, messageInfo):
+        #PII Processor
+        try:
+            Url = messageInfo.getUrl()
+            Method = self._helpers.analyzeRequest(messageInfo).getMethod()
+            upart = URL(Url.toString())
+            self.__stdout.println()
+            Path = upart.path
+            #Host = upart.host
+            #Port = upart.port
+            httpService = messageInfo.getHttpService()
+            Protocol = httpService.getProtocol()
+            #Host = httpService.getHost()
+            #Port = httpService.getPort()
+            #Todo : How to get scheme from URL object?
+
+            HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
+
+            for regex in self.__regexs.keys():
+                PIIType = self.__regexs.get(regex)
+                # Find just one element in the page
+                if self.__scanningDepth == 1:
+                    matchobj = regex.search(responseBody)
+                    if matchobj != None:
+                        matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                        self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+
+                # Find all elements in the page
+                elif self.__scanningDepth != 1:
+                    matchObj_iter = regex.finditer(responseBody)
+                    if matchObj_iter != None:
+                        for matchobj in matchObj_iter:
+                            matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                            self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+
+        except Exception as e:
+            self.__stdout.println(e)
+
         return
 
     #
@@ -180,24 +237,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         if messageIsRequest:
             return
         
-
-        # the condition check if the inScope variable is true or false; in the first case it checks if the httpProxyItem respects the "in scope" condition
         try:
             if messageInfo != None:
-                #httpService = messageInfo.getHttpService()
-                #Host = httpService.getHost()
-                #Protocol = httpService.getProtocol()
-                #self.__stdout.println("test = {} {} {}".format(len(Host),len(Protocol),len(Url)))
-
-                # if only path starts with '/api/'
-                #Url = self._helpers.analyzeRequest(messageInfo).getUrl().toString()
-                #Path = URL(Url).getPath()
-                #if Path.lower() != '/api/v2/api-docs': #Path.lower().startswith("/api/"):
-                #self.__stdout.println(toolFlag)
 
                 #From Proxy
                 if toolFlag == 4:
-
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
@@ -207,52 +251,23 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     if httpProxyItemResponse.getStatusCode() not in [301, 302, 401, 402, 404, 411, 500]:
                         #Get mime type of HTTP response
                         mimeType = httpProxyItemResponse.getStatedMimeType().lower()
-                        if mimeType == "":
+                        if mimeType == '':
                             mimeType = httpProxyItemResponse.getInferredMimeType().lower()
 
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
-                        #Check content type one of json types or scanningLevel == 3
-                        if  mimeType == 'json' or (self.__scanningLevel == 3 and mimeType not in ["png", "gif", "css"]):
+                        if  (self.__scanningType == 1 and mimeType == 'json') or \
+                            (self.__scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
+                            (self.__scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse())
 
-                            responseLength = ''
-                            #Get header length
-                            for header in httpProxyItemResponse.getHeaders():
-                                if header.lower().startswith("content-length:"):
-                                    responseLength = header.split(":")[1].lower()
-                                    break
-
-                            if responseLength == '':
-                                responseLength = len(responseBody)
-
-                            #self.__stdout.println("responseLength = {}".format(responseLength))
-
-                            if responseLength != '':
-                                if httpProxyItemResponse.getBodyOffset() != 0:
-                                    responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+                            if httpProxyItemResponse.getBodyOffset() != 0:
+                                responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
 
                                 #self.__stdout.println(responseBody)
-                                #self.__stdout.println("Matched = {} ".format(matched))
-
-                                for regex in self.__regexs.keys():
-                                    if self.__scanningLevel == 1:
-                                        matchobj = regex.search(responseBody)
-                                        if matchobj != None:
-                                            matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
-                                            self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
-                                    elif self.__scanningLevel > 1:
-                                        matchObj_iter = regex.finditer(responseBody)
-                                        if matchObj_iter != None:
-                                            for matchobj in matchObj_iter:
-                                                matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
-                                                self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
-
-                        #else:
-                            # text, html, gif, png, script, css javascript script html text 
-                            #self.__stdout.println("MimeType = {} {}".format(mimeType, self._helpers.analyzeRequest(messageInfo).getUrl().toString()))
+                                self.PIIProcessor(toolFlag, responseBody, messageInfo)
 
         except Exception as e:
             self.__stdout.println(e)
@@ -269,11 +284,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             return 0
 
     def getColumnCount(self):
-        return 6
+        return 7
 
     def getColumnName(self, columnIndex):
 
-        columnTitle = ["#", "Method", "URL", "Matched Pattern", "PII Type", "Time"]
+        columnTitle = ["#", "Method", "Host", "Path", "Matched Pattern", "PII Type", "Time"]
 
         if columnIndex < len(columnTitle):
             return columnTitle[columnIndex]
@@ -287,13 +302,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         elif columnIndex == 1:
             return logEntry._method
         elif columnIndex == 2:
-            return logEntry._url.toString()
+            return logEntry._host
         elif columnIndex == 3:
-            return logEntry._matched
+            return logEntry._path
         elif columnIndex == 4:
-            return logEntry._piitype
+            return logEntry._matched
         elif columnIndex == 5:
+            return logEntry._piitype
+        elif columnIndex == 6:
             return logEntry._time
+
         return ""
 
     #
@@ -335,14 +353,15 @@ class Table(JTable):
 #
 
 class LogEntry:
-    def __init__(self, tool, requestResponse, url, matched, piitype, method):
+    def __init__(self, tool, requestResponse, host, path, matched, piitype, method):
         self._tool = tool
         self._requestResponse = requestResponse
-        self._url = url
+        self._host = host
+        self._path = path
         self._matched = matched
         self._piitype = piitype
         self._method = method
-        self._time = datetime.now().strftime("%Y_%m_%d_%H:%M:%S")
+        self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
 
 
