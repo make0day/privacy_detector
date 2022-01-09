@@ -7,9 +7,7 @@
 #                           
 #                        Github : https://github.com/make0day/privacy_detector
 #
-#
-#     
-#                        Coded by Samuel Koo ( 0day@kakao.com )
+#                        Written by Samuel Koo ( 0day@kakao.com )
 #
 #                                   and
 #
@@ -33,6 +31,18 @@ from javax.swing import JTabbedPane;
 from javax.swing import JPanel;
 from javax.swing import JTable;
 from javax.swing import SwingUtilities;
+from java.awt.event import ActionListener
+from javax.swing import BorderFactory
+from javax.swing import ButtonGroup
+from javax.swing import JButton
+from javax.swing import JLabel
+from javax.swing import JOptionPane
+from javax.swing import JPanel
+from javax.swing import JProgressBar
+from javax.swing import JScrollPane
+from javax.swing import JTree
+from java.lang import Runnable
+from java.lang import Thread
 from javax.swing.table import AbstractTableModel;
 from threading import Lock
 from java.net import URL
@@ -134,11 +144,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         logTable.getColumnModel().getColumn(5).setPreferredWidth(300)
         logTable.getColumnModel().getColumn(6).setPreferredWidth(250)
 
+        self._logTable = logTable
+
         scrollPane = JScrollPane(logTable)
         self._splitpane.setLeftComponent(scrollPane)
 
         # tabs with request/response viewers
-        #tabs = JTabbedPane()
+        tabs = JTabbedPane()
         #self._requestViewer = callbacks.createMessageEditor(self, False)
         self._responseViewer = callbacks.createMessageEditor(self, False)
 
@@ -152,9 +164,21 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         #self._splitbottompane.setRightComponent(panelResponse)
 
         #tabs.addTab("Request", self._requestViewer.getComponent())
-        #tabs.addTab("Response", self._responseViewer.getComponent())
-        #self._splitpane.setRightComponent(tabs)
-        self._splitpane.setRightComponent(self._responseViewer.getComponent())
+        
+        tabPaneController = JPanel()
+        #tabPaneOptions.setLayout(BoxLayout(tabPaneOptions))
+
+
+        tabs.addTab("Response", self._responseViewer.getComponent())
+        self._splitpane.setRightComponent(tabs)
+        #self._splitpane.setRightComponent(self._responseViewer.getComponent())
+
+        tabs.addTab("Controller", tabPaneController)
+
+        btnParseFullHTTP = JButton("Parse Full HTTP history");
+        tabPaneController.add(btnParseFullHTTP)
+        btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
+
         
         # customize our UI components
         callbacks.customizeUiComponent(self._splitpane)
@@ -176,7 +200,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     
     def getUiComponent(self):
         return self._splitpane
-    
+
+    def StartParseFullHTTP(self):
+        thread = Thread(StartParseFullHTTPRunnable(self))
+        thread.start()
 
     def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
         # create a new log entry with the message details
@@ -194,7 +221,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             Url = messageInfo.getUrl()
             Method = self._helpers.analyzeRequest(messageInfo).getMethod()
             upart = URL(Url.toString())
-            self.__stdout.println()
             Path = upart.path
             #Host = upart.host
             #Port = upart.port
@@ -222,6 +248,53 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         for matchobj in matchObj_iter:
                             matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
                             self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+
+        except Exception as e:
+            self.__stdout.println(e)
+
+        return
+
+    def ParseFullHTTP(self):
+        #Parse Full HTTP history
+        try:
+            httpProxyHistory = self._callbacks.getProxyHistory()
+
+            #logEntry = self._log.get(0)
+            #self.__stdout.println(logEntry)
+
+            TotalProxyHistory = len(httpProxyHistory)
+            Foundcnt = 0
+
+            for httpProxyItem in httpProxyHistory:
+                # Get Response and analyze it
+                if httpProxyItem != None and httpProxyItem.getResponse() != None:
+                    httpProxyItemResponse = self._helpers.analyzeResponse(httpProxyItem.getResponse())
+
+                    # Do not anything if http status code is one of error type
+                    # 301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503
+                    if httpProxyItemResponse.getStatusCode() not in [301, 302, 401, 402, 404, 411, 500]:
+                        #Get mime type of HTTP response
+                        mimeType = httpProxyItemResponse.getStatedMimeType().lower()
+                        if mimeType == '':
+                            mimeType = httpProxyItemResponse.getInferredMimeType().lower()
+
+                        #self.__stdout.println("mimeType = {}".format(mimeType))
+
+                        if  (self.__scanningType == 1 and mimeType == 'json') or \
+                            (self.__scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
+                            (self.__scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
+                    
+                            #Get the response body
+                            responseBody = self._helpers.bytesToString(httpProxyItem.getResponse())
+                            #self.__stdout.println(responseBody)
+
+                            if httpProxyItemResponse.getBodyOffset() != 0:
+                                responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+
+                                self.PIIProcessor(4, responseBody, httpProxyItem)
+                                Foundcnt = Foundcnt + 1
+
+            self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
 
         except Exception as e:
             self.__stdout.println(e)
@@ -364,4 +437,40 @@ class LogEntry:
         self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
 
+#
+# class to run thread Full http history
+#
+
+class StartParseFullHTTPRunnable(Runnable):
+
+    def __init__(self, extender):
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.println("From StartParseFullHTTPRunnable")
+
+    def run(self):
+        #self.__stdout.println("From run StartParseFullHTTPRunnable")
+        self._extender._logTable.setAutoCreateRowSorter(False)
+        self._extender.ParseFullHTTP()
+        self._extender._logTable.setAutoCreateRowSorter(True)
+        self._extender._logTable.validate()
+        self._extender._logTable.repaint()
+
+
+
+class StartParseFullHTTP(ActionListener):
+
+    def __init__(self, extender):
+        super(StartParseFullHTTP, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.println("StartParseFullHTTP")
+
+    def actionPerformed(self, event):
+        #self.__stdout.println("actionPerformed")
+        if len(self._callbacks.getProxyHistory()) > 0:
+            #self.__stdout.println("StartParseFullHTTP")
+            self._extender.StartParseFullHTTP()
 
