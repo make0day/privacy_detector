@@ -33,19 +33,19 @@
          "expression": "\"([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "RoadAddress",
-         "expression": "\"(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동)\\s)[\\d]+)\""
+         "expression": "\"(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동|면|가)\\s)[\\d]+)\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "RoadAddress1",
-         "expression": "\"((?!상가)[가-힣])+(\\d{1,5}|(\\d{1,5}[가-힣,]+\\d{1,5})?)(읍|면|동|가)\""
+         "expression": "\"([가-힣])+(\\d{1,5}|(읍|면|동|가))\""
       },
       {
          "use": true,
          "type": "RoadAddress2",
-         "expression": "\"[가-힣A-Za-z·\\d~\\-\\.]+(로|길)\""
+         "expression": "\"(([가-힣\\s])+[읍면동가길]\\W?(\\d\\W?){1,7}((\\S|\\s){0,30})?)\""
       },
       {
          "use": true,
@@ -103,8 +103,8 @@
          "expression": "\"([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\""
       },
       {
-         "use": true,
-         "type": "accessKeyType1",
+         "use": false,
+         "type": "AccessKeyType1",
          "expression": "\"([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})\""
       },
       {
@@ -140,32 +140,32 @@
       {
          "use": false,
          "type": "PrivateSecureKey",
-         "expression": "-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY"
+         "expression": "\"-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY\""
       },
       {
          "use": false,
          "type": "AuthorizationBasic",
-         "expression": "Basic\\s[a-zA-Z0-9+\\/]+\\=*"
+         "expression": "\"Basic\\s[a-zA-Z0-9+\\/]+\\=*\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer1",
-         "expression": "Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12}"
+         "expression": "\"Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12}\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer2",
-         "expression": "Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?"
+         "expression": "\"Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?\""
       },
       {
          "use": false,
          "type": "GoogleOAuthToken",
-         "expression": "ya29\\.[0-9A-Za-z\\\\-_]+"
+         "expression": "\"ya29\\.[0-9A-Za-z\\\\-_]+\""
       },
       {
          "use": false,
          "type": "GoogleOAuthKey",
-         "expression": "[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com"
+         "expression": "\"[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com\""
       }
    ]
 }

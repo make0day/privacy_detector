@@ -42,6 +42,7 @@ from java.net import URL
 from java.util.regex import *
 from java.lang import *
 from datetime import datetime
+#import requests
 
 
 
@@ -70,12 +71,20 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
 
         # 1 = Single Scan, 2 = Recursive PII Scan, 3 = Full Scan (All Mime Type)
-        self.__scanningLevel = 1
+        self.__scanningLevel = 2
+        self.__stdout.println("[+] Current Scanning Level is : {}".format(self.__scanningLevel))
 
         try:
             #Loads patterns file
             self.__stdout.println("[+] Load PII patters from json file...")
-            f = open("./patterns.json", "r")
+            if os.path.exists("./patterns.json"):
+                f = open("./patterns.json", "r")
+            else:
+                #url = 'https://github.com/make0day/privacy_detector/blob/main/patterns.json'
+                #response = requests.get(url)
+                f = open("./patterns.json", "rw")
+                #f.write(response.text)
+
             keys = f.read().decode('utf-8')
             patternFile = json.loads(keys)
             f.close()
@@ -84,7 +93,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__regexs = dict()
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
+                    #self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
                     self.__regexs[(re.compile(pattern['expression'].encode('utf-8')))] = pattern['type']
         except Exception as e:
             self.__stdout.println(e)
@@ -102,9 +111,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         logTable.setAutoResizeMode(Table.AUTO_RESIZE_OFF)
         logTable.getColumnModel().getColumn(0).setPreferredWidth(50)
         logTable.getColumnModel().getColumn(1).setPreferredWidth(100)
-        logTable.getColumnModel().getColumn(2).setPreferredWidth(700)
-        logTable.getColumnModel().getColumn(3).setPreferredWidth(300)
-        logTable.getColumnModel().getColumn(4).setPreferredWidth(300)
+        logTable.getColumnModel().getColumn(2).setPreferredWidth(750)
+        logTable.getColumnModel().getColumn(3).setPreferredWidth(400)
+        logTable.getColumnModel().getColumn(4).setPreferredWidth(350)
         logTable.getColumnModel().getColumn(5).setPreferredWidth(200)
 
         scrollPane = JScrollPane(logTable)
@@ -196,7 +205,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
 
                     # Do not anything if http status code is one of error type
-                    if httpProxyItemResponse.getStatusCode() not in [401, 402, 403, 404, 405, 500, 502]:
+                    if httpProxyItemResponse.getStatusCode() not in [301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503]:
                         #Get mime type of HTTP response
                         mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                         if mimeType == "":
@@ -205,7 +214,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
                         #Check content type one of json types or scanningLevel == 3
-                        if self.__scanningLevel == 3 or mimeType == 'json':
+                        if  mimeType == 'json' or (self.__scanningLevel == 3 and mimeType == 'xml'): #javascript script html text
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse())
@@ -227,7 +236,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                     responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
 
                                 #self.__stdout.println(responseBody)
- 
+                                #self.__stdout.println("Matched = {} ".format(matched))
+
                                 for regex in self.__regexs.keys():
                                     if self.__scanningLevel == 1:
                                         matchobj = regex.search(responseBody)
@@ -240,10 +250,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                             for matchobj in matchObj_iter:
                                                 matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
                                                 self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
-
-                                       
-                                                #self.__stdout.println("Matched = {} ".format(matched))
-                                
 
         except Exception as e:
             self.__stdout.println(e)
