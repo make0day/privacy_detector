@@ -17,6 +17,8 @@ import sys
 import os
 import json
 import re
+from datetime import datetime
+from threading import Lock
 from burp import IBurpExtender
 from burp import ITab
 from burp import IHttpListener
@@ -32,6 +34,11 @@ from javax.swing import JPanel;
 from javax.swing import JTable;
 from javax.swing import SwingUtilities;
 from java.awt.event import ActionListener
+from java.awt import BorderLayout
+from java.awt import FlowLayout
+from java.awt import Color
+from java.awt import Font
+from java.awt import GridLayout
 from javax.swing import BorderFactory
 from javax.swing import ButtonGroup
 from javax.swing import JButton
@@ -40,15 +47,14 @@ from javax.swing import JOptionPane
 from javax.swing import JPanel
 from javax.swing import JProgressBar
 from javax.swing import JScrollPane
+from javax.swing import JOptionPane
 from javax.swing import JTree
 from java.lang import Runnable
 from java.lang import Thread
 from javax.swing.table import AbstractTableModel;
-from threading import Lock
 from java.net import URL
 from java.util.regex import *
 from java.lang import *
-from datetime import datetime
 
 
 
@@ -143,7 +149,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         logTable.getColumnModel().getColumn(4).setPreferredWidth(350)
         logTable.getColumnModel().getColumn(5).setPreferredWidth(300)
         logTable.getColumnModel().getColumn(6).setPreferredWidth(250)
-
         self._logTable = logTable
 
         scrollPane = JScrollPane(logTable)
@@ -166,7 +171,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         #tabs.addTab("Request", self._requestViewer.getComponent())
         
         tabPaneController = JPanel()
-        #tabPaneOptions.setLayout(BoxLayout(tabPaneOptions))
+        tabPaneController.setLayout(BorderLayout())
 
 
         tabs.addTab("Response", self._responseViewer.getComponent())
@@ -174,10 +179,53 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         #self._splitpane.setRightComponent(self._responseViewer.getComponent())
 
         tabs.addTab("Controller", tabPaneController)
+        btnList = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
 
-        btnParseFullHTTP = JButton("Parse Full HTTP history");
-        tabPaneController.add(btnParseFullHTTP)
+
+        btnSendLog = JButton("Send log to the server")
+        btnList.add(btnSendLog,BorderLayout.NORTH)
+        btnSendLog.setSize(300, 300)
+        btnSendLog.addActionListener(StartSendLog(self))
+
+        btnSaveFile = JButton("Save log as a file")
+        btnList.add(btnSaveFile,BorderLayout.SOUTH)
+        btnSaveFile.setSize(300, 300)
+        btnSaveFile.addActionListener(StartSaveFile(self))
+
+        btnParseFullHTTP = JButton("Parse Full HTTP history")
+        btnList.add(btnParseFullHTTP,BorderLayout.EAST)
+        btnParseFullHTTP.setSize(300, 300)
         btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
+
+        btnAbout = JButton("About Privacy detector...")
+        btnAbout.setSize(300, 300)
+        btnList.add(btnAbout, BorderLayout.WEST)
+        btnAbout.addActionListener(AboutActionListener(self))
+
+        #btnList.add(titleLabel, BorderLayout.NORTH)
+        tabPaneController.add(btnList,BorderLayout.CENTER)
+
+        PaneCenter = JPanel(BorderLayout())
+        titleLabel = JLabel('Privacy detector')
+        titleLabel.setForeground(Color(229, 137, 0))
+        titleLabel.setFont(Font('Heading', Font.BOLD, 20))
+        titleLabel.setSize(300, 300)
+        PaneCenter.add(titleLabel, BorderLayout.NORTH)
+        descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extract privacy information from HTTP response automatically')
+        descriptionLabel.setSize(300, 300)
+        PaneCenter.add(descriptionLabel, BorderLayout.CENTER)
+
+        tabPaneController.layout.vgap = 20
+        PaneCenter.layout.hgap = 20
+
+        tabPaneController.add(PaneCenter,BorderLayout.NORTH)
+
+        PaneStatus = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
+        statusLabel = JLabel('Status : ')
+        self._statusValueLabel = JLabel('Listening...')
+        PaneStatus.add(statusLabel)
+        PaneStatus.add(self._statusValueLabel)
+        tabPaneController.add(PaneStatus,BorderLayout.SOUTH)
 
         
         # customize our UI components
@@ -205,6 +253,14 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         thread = Thread(StartParseFullHTTPRunnable(self))
         thread.start()
 
+    def StartSendLog(self):
+        thread = Thread(StartSendLogRunnable(self))
+        thread.start()
+
+    def StartSaveFile(self):
+        thread = Thread(StartSaveFileRunnable(self))
+        thread.start()
+
     def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
         # create a new log entry with the message details
         self._lock.acquire()
@@ -214,6 +270,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._lock.release()
         return
 
+    #
+    # implement IBurpExtender
+    #
 
     def PIIProcessor(self, toolFlag, responseBody, messageInfo):
         #PII Processor
@@ -231,7 +290,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             #Todo : How to get scheme from URL object?
 
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
-
+            IsPIIContaind = False
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
@@ -240,7 +299,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     if matchobj != None:
                         matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
                         self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
-
+                        IsPIIContaind = True
                 # Find all elements in the page
                 elif self.__scanningDepth != 1:
                     matchObj_iter = regex.finditer(responseBody)
@@ -248,11 +307,17 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         for matchobj in matchObj_iter:
                             matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
                             self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                            IsPIIContaind = True
 
         except Exception as e:
             self.__stdout.println(e)
 
-        return
+        return IsPIIContaind
+
+
+    #
+    # implement 
+    #
 
     def ParseFullHTTP(self):
         #Parse Full HTTP history
@@ -291,15 +356,35 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
 
-                                self.PIIProcessor(4, responseBody, httpProxyItem)
-                                Foundcnt = Foundcnt + 1
+                                IsPIIContaind = self.PIIProcessor(4, responseBody, httpProxyItem)
+                                if IsPIIContaind == True:
+                                    Foundcnt = Foundcnt + 1
 
             self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
+            self._statusValueLabel.setText("[+] Found {} PIIs from total {} entries...".format(Foundcnt, TotalProxyHistory))
 
         except Exception as e:
             self.__stdout.println(e)
 
         return
+
+    #
+    # implement 
+    #
+
+    def SaveFile(self):
+        self.__stdout.println("SaveFile func")
+        return
+
+    #
+    # implement 
+    #
+
+    def SendLog(self):
+        self.__stdout.println("SendLog func")
+        return
+
+
 
     #
     # implement IHttpListener
@@ -457,7 +542,76 @@ class StartParseFullHTTPRunnable(Runnable):
         self._extender._logTable.validate()
         self._extender._logTable.repaint()
 
+#
+# class to run thread Full http history
+#
 
+class StartSaveFileRunnable(Runnable):
+
+    def __init__(self, extender):
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout.println("From StartSaveFileRunnable")
+
+    def run(self):
+        self.__stdout.println("From run StartSaveFileRunnable")
+        self._extender.SaveFile()
+
+#
+# class to run thread Full http history
+#
+
+class StartSendLogRunnable(Runnable):
+
+    def __init__(self, extender):
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout.println("From StartSendLogRunnable")
+
+    def run(self):
+        self.__stdout.println("From run StartSendLogRunnable")
+        self._extender.SendLog()
+
+
+#
+# class to run thread Save File
+#
+
+class StartSaveFile(ActionListener):
+
+    def __init__(self, extender):
+        super(StartSaveFile, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.println("StartSaveFile")
+
+    def actionPerformed(self, event):
+        self.__stdout.println("actionPerformed")
+        self._extender.StartSaveFile()
+
+#
+# class to run thread Send Log
+#
+
+class StartSendLog(ActionListener):
+
+    def __init__(self, extender):
+        super(StartSendLog, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.println("StartSendLog")
+
+    def actionPerformed(self, event):
+        self.__stdout.println("actionPerformed")
+        self._extender.StartSendLog()
+
+#
+# class to run thread Full http history
+#
 
 class StartParseFullHTTP(ActionListener):
 
@@ -474,3 +628,24 @@ class StartParseFullHTTP(ActionListener):
             #self.__stdout.println("StartParseFullHTTP")
             self._extender.StartParseFullHTTP()
 
+#
+# class to run thread Full http history
+#
+
+class AboutActionListener(ActionListener):
+
+    def __init__(self, extender):
+        super(AboutActionListener, self).__init__()
+        self._extender = extender
+
+    def actionPerformed(self, event):
+        JOptionPane.showMessageDialog(self._extender._splitpane, '\n'.join([
+            'Privacy Detector Burp Plugin 1.0',
+            '',
+            'Written by Samuel Koo & Daniel Koo',
+            '',
+            'GitHub: https://github.com/make0day/privacy_detector',
+            '',
+            'Mailto: reby7146@me.com or 0day@kakao.com',
+            '',
+        ]), 'Information - Privacy Detector Burp Plugin 1.0', JOptionPane.INFORMATION_MESSAGE)
