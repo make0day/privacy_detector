@@ -152,6 +152,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._logTable = logTable
 
         scrollPane = JScrollPane(logTable)
+        self._scrollPane = scrollPane
         self._splitpane.setLeftComponent(scrollPane)
 
         # tabs with request/response viewers
@@ -192,10 +193,15 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnSaveFile.setSize(300, 300)
         btnSaveFile.addActionListener(StartSaveFile(self))
 
-        btnParseFullHTTP = JButton("Parse Full HTTP history")
+        btnParseFullHTTP = JButton("Parse Full history")
         btnList.add(btnParseFullHTTP,BorderLayout.EAST)
         btnParseFullHTTP.setSize(300, 300)
         btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
+
+        btnClearHistory = JButton("Clear history")
+        btnList.add(btnClearHistory,BorderLayout.CENTER)
+        btnClearHistory.setSize(300, 300)
+        btnClearHistory.addActionListener(StartClearHistory(self))
 
         btnAbout = JButton("About Privacy detector...")
         btnAbout.setSize(300, 300)
@@ -206,7 +212,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         tabPaneController.add(btnList,BorderLayout.CENTER)
 
         PaneCenter = JPanel(BorderLayout())
-        titleLabel = JLabel('Privacy detector')
+        titleLabel = JLabel('HTTP Privacy Detector Extender for Burp Suite')
         titleLabel.setForeground(Color(229, 137, 0))
         titleLabel.setFont(Font('Heading', Font.BOLD, 20))
         titleLabel.setSize(300, 300)
@@ -252,14 +258,30 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def StartParseFullHTTP(self):
         thread = Thread(StartParseFullHTTPRunnable(self))
         thread.start()
+        return
 
     def StartSendLog(self):
         thread = Thread(StartSendLogRunnable(self))
         thread.start()
+        return
 
     def StartSaveFile(self):
         thread = Thread(StartSaveFileRunnable(self))
         thread.start()
+        return
+
+    def StartClearHistory(self):
+        dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?")
+        if dialog == JOptionPane.YES_OPTION:
+            self.__stdout.println("StartClearHistory")
+            #self._log.clear()
+            #self.self._scrollPane.clear()
+
+            #self._responseViewer.setMessage(None, False)
+            #self._currentlyDisplayedItem = ''
+            #self._logTable.validate()
+            #self._logTable.repaint()
+        return
 
     def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
         # create a new log entry with the message details
@@ -360,7 +382,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                 if IsPIIContaind == True:
                                     Foundcnt = Foundcnt + 1
 
-            self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
+            #self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
             self._statusValueLabel.setText("[+] Found {} PIIs from total {} entries...".format(Foundcnt, TotalProxyHistory))
 
         except Exception as e:
@@ -383,7 +405,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def SendLog(self):
         self.__stdout.println("SendLog func")
         return
-
 
 
     #
@@ -610,6 +631,23 @@ class StartSendLog(ActionListener):
         self._extender.StartSendLog()
 
 #
+# class to run Clear history
+#
+
+class StartClearHistory(ActionListener):
+
+    def __init__(self, extender):
+        super(StartClearHistory, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout.println("StartClearHistory")
+
+    def actionPerformed(self, event):
+        #self.__stdout.println("actionPerformed")
+        self._extender.StartClearHistory()
+
+#
 # class to run thread Full http history
 #
 
@@ -624,9 +662,11 @@ class StartParseFullHTTP(ActionListener):
 
     def actionPerformed(self, event):
         #self.__stdout.println("actionPerformed")
-        if len(self._callbacks.getProxyHistory()) > 0:
-            #self.__stdout.println("StartParseFullHTTP")
-            self._extender.StartParseFullHTTP()
+        dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?")
+        if dialog == JOptionPane.YES_OPTION:
+            if len(self._callbacks.getProxyHistory()) > 0:
+                #self.__stdout.println("StartParseFullHTTP")
+                self._extender.StartParseFullHTTP()
 
 #
 # class to run thread Full http history
