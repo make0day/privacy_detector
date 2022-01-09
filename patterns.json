@@ -33,18 +33,8 @@
          "expression": "\"([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}\""
       },
       {
-         "use": false,
-         "type": "RoadAddress",
-         "expression": "\"(([가-힣A-Za-z·\\d~\\-\\.]{2,}(로|길).[\\d]+)|([가-힣A-Za-z·\\d~\\-\\.]+(읍|동|면|가)\\s))\""
-      },
-      {
-         "use": false,
-         "type": "RoadAddress1",
-         "expression": "\"([가-힣])+(\\d{1,5}|(읍|면|동|가))\""
-      },
-      {
          "use": true,
-         "type": "RoadAddress2",
+         "type": "RoadAddress",
          "expression": "\"(([가-힣\\s])+[읍면동가길]\\W?(\\d\\W?){1,7}([가-힣A-Za-z\\s]{0,30})?)\""
       },
       {
