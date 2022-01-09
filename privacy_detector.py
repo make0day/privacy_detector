@@ -70,8 +70,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
 
-        # 1 = Single Scan, 2 = Recursive PII Scan, 3 = Full Scan (All Mime Type)
-        self.__scanningLevel = 2
+        # 1 = Fast Scan, 2 = Normal Scan, 3 = Full Scan
+        self.__scanningLevel = 1
         self.__stdout.println("[+] Current Scanning Level is : {}".format(self.__scanningLevel))
 
         try:
@@ -82,7 +82,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             else:
                 #url = 'https://github.com/make0day/privacy_detector/blob/main/patterns.json'
                 #response = requests.get(url)
-                f = open("./patterns.json", "rw")
+                f = open("./patterns.json", "r")
                 #f.write(response.text)
 
             keys = f.read().decode('utf-8')
@@ -104,7 +104,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # main split pane
         self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        #self._splitpane.setResizeWeight(0.2)
+        self._splitpane.setResizeWeight(0.5)
 
         # table of log entries
         logTable = Table(self)
@@ -120,12 +120,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._splitpane.setLeftComponent(scrollPane)
 
         # tabs with request/response viewers
-        tabs = JTabbedPane()
-        self._requestViewer = callbacks.createMessageEditor(self, False)
+        #tabs = JTabbedPane()
+        #self._requestViewer = callbacks.createMessageEditor(self, False)
         self._responseViewer = callbacks.createMessageEditor(self, False)
-
-        #panelRequest = JPanel()
-        #panelResponse = JPanel()
 
         #panelRequest.add(self._requestViewer.getComponent())
         #panelResponse.add(self._responseViewer.getComponent())
@@ -136,9 +133,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         #self._splitbottompane.setLeftComponent(panelRequest)
         #self._splitbottompane.setRightComponent(panelResponse)
 
-        tabs.addTab("Request", self._requestViewer.getComponent())
-        tabs.addTab("Response", self._responseViewer.getComponent())
-        self._splitpane.setRightComponent(tabs)
+        #tabs.addTab("Request", self._requestViewer.getComponent())
+        #tabs.addTab("Response", self._responseViewer.getComponent())
+        #self._splitpane.setRightComponent(tabs)
+        self._splitpane.setRightComponent(self._responseViewer.getComponent())
 
         #self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT, self._splitpane, self._splitbottompane);
         
@@ -146,7 +144,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         callbacks.customizeUiComponent(self._splitpane)
         callbacks.customizeUiComponent(logTable)
         callbacks.customizeUiComponent(scrollPane)
-        callbacks.customizeUiComponent(tabs)
+        #callbacks.customizeUiComponent(tabs)
         
         # add the custom tab to Burp's UI
         callbacks.addSuiteTab(self)
@@ -205,7 +203,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
 
                     # Do not anything if http status code is one of error type
-                    if httpProxyItemResponse.getStatusCode() not in [301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503]:
+                    # 301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503
+                    if httpProxyItemResponse.getStatusCode() not in [301, 302, 401, 402, 404, 411, 500]:
                         #Get mime type of HTTP response
                         mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                         if mimeType == "":
@@ -214,7 +213,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
                         #Check content type one of json types or scanningLevel == 3
-                        if  mimeType == 'json' or (self.__scanningLevel == 3 and mimeType == 'xml'): #javascript script html text
+                        if  mimeType == 'json' or (self.__scanningLevel == 3 and mimeType not in ["png", "gif", "css"]):
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse())
@@ -251,6 +250,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                                 matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
                                                 self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), self._helpers.analyzeRequest(messageInfo).getUrl(), matched, self.__regexs.get(regex), self._helpers.analyzeRequest(messageInfo).getMethod())
 
+                        #else:
+                            # text, html, gif, png, script, css javascript script html text 
+                            #self.__stdout.println("MimeType = {} {}".format(mimeType, self._helpers.analyzeRequest(messageInfo).getUrl().toString()))
+
         except Exception as e:
             self.__stdout.println(e)
     
@@ -269,33 +272,27 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         return 6
 
     def getColumnName(self, columnIndex):
-        if columnIndex == 0:
-            return "#"
-        if columnIndex == 1:
-            return "Method"
-        if columnIndex == 2:
-            return "URL"
-        if columnIndex == 3:
-            return "Matched Pattern"
-        if columnIndex == 4:
-            return "PII Type"
-        if columnIndex == 5:
-            return "Time"
+
+        columnTitle = ["#", "Method", "URL", "Matched Pattern", "PII Type", "Time"]
+
+        if columnIndex < len(columnTitle):
+            return columnTitle[columnIndex]
+
         return ""
 
     def getValueAt(self, rowIndex, columnIndex):
         logEntry = self._log.get(rowIndex)
         if columnIndex == 0:
             return str(rowIndex)
-        if columnIndex == 1:
+        elif columnIndex == 1:
             return logEntry._method
-        if columnIndex == 2:
+        elif columnIndex == 2:
             return logEntry._url.toString()
-        if columnIndex == 3:
+        elif columnIndex == 3:
             return logEntry._matched
-        if columnIndex == 4:
+        elif columnIndex == 4:
             return logEntry._piitype
-        if columnIndex == 5:
+        elif columnIndex == 5:
             return logEntry._time
         return ""
 
@@ -326,7 +323,8 @@ class Table(JTable):
     
         # show the log entry for the selected row
         logEntry = self._extender._log.get(row)
-        self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
+
+        #self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
         self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
         self._extender._currentlyDisplayedItem = logEntry._requestResponse
         
