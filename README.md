@@ -20,7 +20,7 @@ To install Privacy Detector, you have to:
 1. Live PII Detect : Privacy Detector will parse all http history generated from that moment and it will find any PII.
 2. Parse Full HTTP history : the plugin will parse full requests history.
 3. Options : 
-- 1) Send log to Siem server
+- 1) Send log to SIEM server
 - 2) Send log as a file
 - 3) Clear history
 
