@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf8
+# -*- coding:utf-8 -*-
 #
 #     
 #                    Privacy Detector Project
@@ -19,44 +19,26 @@ import json
 import re
 from datetime import datetime
 from threading import Lock
-from burp import IBurpExtender
-from burp import ITab
-from burp import IHttpListener
-from burp import IMessageEditorController
-from java.awt import Component;
-from java.io import PrintWriter;
-from java.util import ArrayList;
-from java.util import List;
-from javax.swing import JScrollPane;
-from javax.swing import JSplitPane;
-from javax.swing import JTabbedPane;
-from javax.swing import JPanel;
-from javax.swing import JTable;
-from javax.swing import SwingUtilities;
+
+from burp import IBurpExtender, ITab, IHttpListener, IMessageEditorController, IMessageEditorController
+
 from java.awt.event import ActionListener
-from java.awt import BorderLayout
-from java.awt import FlowLayout
-from java.awt import Color
-from java.awt import Font
-from java.awt import GridLayout
-from javax.swing import BorderFactory
-from javax.swing import ButtonGroup
-from javax.swing import JButton
-from javax.swing import JLabel
-from javax.swing import JOptionPane
-from javax.swing import JPanel
-from javax.swing import JProgressBar
-from javax.swing import JScrollPane
-from javax.swing import JOptionPane
-from javax.swing import JTree
-from java.lang import Runnable
-from java.lang import Thread
-from javax.swing.table import AbstractTableModel;
-from java.net import URL
-from java.util.regex import *
+from java.awt import Component, Color, Font
+from java.awt import BorderLayout, FlowLayout, GridLayout
+from javax.swing import SwingUtilities
+from javax.swing import JButton,JTable, JLabel, JProgressBar, JTree, ButtonGroup, BorderFactory
+from javax.swing import JPanel, JOptionPane, JScrollPane, JSplitPane, JTabbedPane
+from javax.swing.table import AbstractTableModel
+from java.lang import Thread, Runnable
 from java.lang import *
+from java.util import ArrayList, List
+from java.util.regex import *
+from java.io import PrintWriter
+from java.net import URL
 
-
+#
+# implement IBurpExtender
+#
 
 class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController, AbstractTableModel):
     
@@ -144,7 +126,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         logTable.setAutoResizeMode(Table.AUTO_RESIZE_OFF)
         logTable.getColumnModel().getColumn(0).setPreferredWidth(50)
         logTable.getColumnModel().getColumn(1).setPreferredWidth(100)
-        logTable.getColumnModel().getColumn(2).setPreferredWidth(350)
+        logTable.getColumnModel().getColumn(2).setPreferredWidth(300)
         logTable.getColumnModel().getColumn(3).setPreferredWidth(550)
         logTable.getColumnModel().getColumn(4).setPreferredWidth(350)
         logTable.getColumnModel().getColumn(5).setPreferredWidth(300)
@@ -179,7 +161,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._splitpane.setRightComponent(tabs)
         #self._splitpane.setRightComponent(self._responseViewer.getComponent())
 
-        tabs.addTab("Controller", tabPaneController)
+        tabs.addTab("Options", tabPaneController)
         btnList = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
 
 
@@ -274,13 +256,17 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?")
         if dialog == JOptionPane.YES_OPTION:
             self.__stdout.println("StartClearHistory")
-            #self._log.clear()
-            #self.self._scrollPane.clear()
 
-            #self._responseViewer.setMessage(None, False)
-            #self._currentlyDisplayedItem = ''
-            #self._logTable.validate()
-            #self._logTable.repaint()
+            self._lock.acquire()
+            #row = self._log.size()
+            self._log.clear()
+            self.fireTableDataChanged()
+            self._lock.release()
+
+            self._responseViewer.setMessage('', False)
+            self._currentlyDisplayedItem = ''
+            self._logTable.validate()
+            self._logTable.repaint()
         return
 
     def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
@@ -514,6 +500,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 class Table(JTable):
     def __init__(self, extender):
         self._extender = extender
+        self._callbacks = extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
         self.setModel(extender)
     
     def changeSelection(self, row, col, toggle, extend):
@@ -522,8 +510,29 @@ class Table(JTable):
         logEntry = self._extender._log.get(row)
 
         #self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
-        self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
-        self._extender._currentlyDisplayedItem = logEntry._requestResponse
+
+        httpProxyItemResponse = self._callbacks.getHelpers().analyzeResponse(logEntry._requestResponse.getResponse())
+        if httpProxyItemResponse.getBodyOffset() != 0:
+
+            responseBody = String(logEntry._requestResponse.getResponse(), Charsets.UTF_8)
+
+            #responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
+            responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+
+            mimeType = httpProxyItemResponse.getStatedMimeType().lower()
+            if mimeType == '':
+                mimeType = httpProxyItemResponse.getInferredMimeType().lower()
+
+            if mimeType == 'json':
+                #responseBody = responseBody#json.dumps(responseBody, indent=4, ensure_ascii=False, separators=(',', ': '), sort_keys=True).encode('utf-8')
+                 #unicode(responseBody.decode('utf-8'),'utf-8')
+
+                self.__stdout.println(responseBody)
+            else:
+                responseBody = responseBody.decode('utf-8')
+            #self._callbacks.getHelpers().stringToBytes(unicode(responseBody).encode('utf-8'))
+            self._extender._responseViewer.setMessage(responseBody, False)
+            self._extender._currentlyDisplayedItem = logEntry._requestResponse
         
         JTable.changeSelection(self, row, col, toggle, extend)
     

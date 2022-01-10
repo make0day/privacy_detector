@@ -73,7 +73,7 @@
          "expression": "\"[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9]{2}\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "BankAccountNumber",
          "expression": "\"([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])\""
       },
@@ -83,12 +83,12 @@
          "expression": "\"([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "IPV4Address",
          "expression": "\"(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "MacAddress",
          "expression": "\"([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\""
       },
@@ -108,22 +108,22 @@
          "expression": "\"([01][0-9]{5}[[:space:]~-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "AWSSessionToken",
          "expression": "\"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=])\""
       },
       {
          "use": false,
          "type": "AWSAccessKey",
-         "expression": "\"AKIA[A-Za-z0-9/+=]{12}\""
+         "expression": "\"AKIA[0-9A-Z]{16}\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "TencentSecretId",
          "expression": "\"AKID[A-Za-z0-9]{34}\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "AWSSecretKey",
          "expression": "\"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])\""
       },
@@ -149,6 +149,11 @@
       },
       {
          "use": false,
+         "type": "AuthorizationAPI",
+         "expression": "\"api[key|\\s*]+[a-zA-Z0-9_\\-]+\""
+      },
+      {
+         "use": false,
          "type": "GoogleOAuthToken",
          "expression": "\"ya29\\.[0-9A-Za-z\\\\-_]+\""
       },
@@ -156,6 +161,16 @@
          "use": false,
          "type": "GoogleOAuthKey",
          "expression": "\"[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com\""
+      },
+      {
+         "use": false,
+         "type": "GoogleAPIToken",
+         "expression": "\"AIza[0-9A-Za-z-_]{35}\""
+      },
+      {
+         "use": false,
+         "type": "FacebookAuthToken",
+         "expression": "\"EAACEdEose0cBA[0-9A-Za-z]+\""
       }
    ]
 }
