@@ -27,8 +27,8 @@ To install Privacy Detector, you have to:
 ## Credits
 
 Privacy Detector was born in 2022 by Koo brothers, for finding privacy information from HTTP responses automatically.
-Samuel Koo - 0day@kakao.com
-Daniel Koo - reby7146@me.com
+- Samuel Koo - 0day@kakao.com 
+- Daniel Koo - reby7146@me.com
 
 ## References
 
