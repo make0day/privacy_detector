@@ -34,7 +34,9 @@ Privacy Detector was born in 2022 by Koo brothers, for finding privacy informati
 
 - [PortSwigger Burp API Reference](https://portswigger.net/burp/extender/api/burp/package-summary.html): PortSwigger Official Burp API Reference.
 
-## Version Changes
+## Change log
 
-- Jan / 10 / 2022 Initial Release
+**1.0.0**
+
+* Jan / 10 / 2022: Creation of the extension and initial release.
 
