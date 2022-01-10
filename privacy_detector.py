@@ -103,11 +103,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
         self.__scanningType = 1
-        self.__stdout.println("[+] Current Scanning Mime Type is : {}".format(self.__scanningType))
+        self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self.__scanningType))
 
         # 1 = Find one item from the page, 1 > = Find all items
         self.__scanningDepth = 2
-        self.__stdout.println("[+] Current Scanning Depth is : {}".format(self.__scanningDepth))
+        self.__stdout.println("[+] Current Scanning Depth : {}".format(self.__scanningDepth))
 
         self.__stdout.println("[+] Load PII patters from json file...")
         patternFile = self.LoadRulesetFile()
@@ -185,7 +185,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnClearHistory.setSize(300, 300)
         btnClearHistory.addActionListener(StartClearHistory(self))
 
-        btnAbout = JButton("About Privacy detector...")
+        btnAbout = JButton("About Privacy Detector...")
         btnAbout.setSize(300, 300)
         btnList.add(btnAbout, BorderLayout.WEST)
         btnAbout.addActionListener(AboutActionListener(self))
@@ -199,7 +199,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         titleLabel.setFont(Font('Heading', Font.BOLD, 20))
         titleLabel.setSize(300, 300)
         PaneCenter.add(titleLabel, BorderLayout.NORTH)
-        descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extract privacy information from HTTP response automatically')
+        descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extracts privacy information from HTTP responses automatically')
         descriptionLabel.setSize(300, 300)
         PaneCenter.add(descriptionLabel, BorderLayout.CENTER)
 
@@ -253,7 +253,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         return
 
     def StartClearHistory(self):
-        dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?")
+        dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?","Privacy Detector", JOptionPane.YES_NO_OPTION)
         if dialog == JOptionPane.YES_OPTION:
             self.__stdout.println("StartClearHistory")
 
@@ -510,31 +510,45 @@ class Table(JTable):
         logEntry = self._extender._log.get(row)
 
         #self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
+        try:
+            httpProxyItemResponse = self._callbacks.getHelpers().analyzeResponse(logEntry._requestResponse.getResponse())
+            if httpProxyItemResponse.getBodyOffset() != 0:
 
-        httpProxyItemResponse = self._callbacks.getHelpers().analyzeResponse(logEntry._requestResponse.getResponse())
-        if httpProxyItemResponse.getBodyOffset() != 0:
-
-            responseBody = String(logEntry._requestResponse.getResponse(), Charsets.UTF_8)
-
-            #responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
-            responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
-
-            mimeType = httpProxyItemResponse.getStatedMimeType().lower()
-            if mimeType == '':
-                mimeType = httpProxyItemResponse.getInferredMimeType().lower()
-
-            if mimeType == 'json':
-                #responseBody = responseBody#json.dumps(responseBody, indent=4, ensure_ascii=False, separators=(',', ': '), sort_keys=True).encode('utf-8')
-                 #unicode(responseBody.decode('utf-8'),'utf-8')
-
+                responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
+                #self.__stdout.println(responseBody.decode('utf-8'))
+                responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
                 self.__stdout.println(responseBody)
+                #self.__stdout.println(responseBody.decode('utf-8'))
+                #self.__stdout.println(responseBody.encode('utf-8'))
+                #self.__stdout.println(responseBody)
+
+                #responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+                #responseBody = unicode(responseBody, 'utf-8').decode('utf-8')
+                #self.__stdout.println("test2 = {}".format(responseBody))
+                #responseBody = unicode(responseBody, 'utf-8').decode('utf-8')
+
+                mimeType = httpProxyItemResponse.getStatedMimeType().lower()
+                if mimeType == '':
+                    mimeType = httpProxyItemResponse.getInferredMimeType().lower()
+
+                if mimeType == 'json':
+                    #responseBody = responseBody#json.dumps(responseBody, indent=4, ensure_ascii=False, separators=(',', ': '), sort_keys=True).encode('utf-8')
+                     #unicode(responseBody.decode('utf-8'),'utf-8')
+                     self.__stdout.println("json")
+                else:
+                     self.__stdout.println("No json")
+                #self._callbacks.getHelpers().stringToBytes(unicode(responseBody).encode('utf-8'))
+
+                self._extender._responseViewer.setMessage(responseBody, False)
             else:
-                responseBody = responseBody.decode('utf-8')
-            #self._callbacks.getHelpers().stringToBytes(unicode(responseBody).encode('utf-8'))
-            self._extender._responseViewer.setMessage(responseBody, False)
-            self._extender._currentlyDisplayedItem = logEntry._requestResponse
-        
+                self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
+
+        except Exception as e:
+            self.__stdout.println(e)
+
+        self._extender._currentlyDisplayedItem = logEntry._requestResponse
         JTable.changeSelection(self, row, col, toggle, extend)
+        return
     
 #
 # class to hold details of each log entry
@@ -671,7 +685,7 @@ class StartParseFullHTTP(ActionListener):
 
     def actionPerformed(self, event):
         #self.__stdout.println("actionPerformed")
-        dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?")
+        dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?","Privacy Detector", JOptionPane.YES_NO_OPTION)
         if dialog == JOptionPane.YES_OPTION:
             if len(self._callbacks.getProxyHistory()) > 0:
                 #self.__stdout.println("StartParseFullHTTP")
@@ -689,7 +703,7 @@ class AboutActionListener(ActionListener):
 
     def actionPerformed(self, event):
         JOptionPane.showMessageDialog(self._extender._splitpane, '\n'.join([
-            'Privacy Detector Burp Plugin 1.0',
+            'HTTP Privacy Detector for Burp Suite',
             '',
             'Written by Samuel Koo & Daniel Koo',
             '',
