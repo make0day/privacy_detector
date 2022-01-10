@@ -525,18 +525,31 @@ class Table(JTable):
                      responseBody = json.dumps(json.loads(responseBody), indent=4, ensure_ascii=False)
                      responseBody = ''.join([
                                     'HTTP/1.1 200 OK\r\n'
-                                    'Content-Type: application/json\r\n',
+                                    'Content-Type: application/json; charset=UTF-8\r\n',
                                     '\r\n',
                                     responseBody])
                    
                      self._extender._responseViewer.setMessage(responseBody.encode('utf-8'), False)
                 else:
-                     self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
+                    content_type = 'Content-Type: text/plain; charset=UTF-8\r\n'
+                    for header in re.getHeaders():
+                        if header.lower().startswith("content-type:"):
+                            content_type = header
+                            break
+
+                    responseBody = ''.join([
+                                    'HTTP/1.1 200 OK\r\n',
+                                    content_type,
+                                    '\r\n',
+                                    responseBody])
+
+                    self._extender._responseViewer.setMessage(responseBody.encode('utf-8'), False)
             else:
                 self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
 
         except Exception as e:
             self.__stdout.println(e)
+            self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
 
         self._extender._currentlyDisplayedItem = logEntry._requestResponse
         JTable.changeSelection(self, row, col, toggle, extend)
