@@ -508,38 +508,30 @@ class Table(JTable):
     
         # show the log entry for the selected row
         logEntry = self._extender._log.get(row)
-
         #self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
+
         try:
             httpProxyItemResponse = self._callbacks.getHelpers().analyzeResponse(logEntry._requestResponse.getResponse())
             if httpProxyItemResponse.getBodyOffset() != 0:
 
                 responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
-                #self.__stdout.println(responseBody.decode('utf-8'))
                 responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
-                self.__stdout.println(responseBody)
-                #self.__stdout.println(responseBody.decode('utf-8'))
-                #self.__stdout.println(responseBody.encode('utf-8'))
-                #self.__stdout.println(responseBody)
-
-                #responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
-                #responseBody = unicode(responseBody, 'utf-8').decode('utf-8')
-                #self.__stdout.println("test2 = {}".format(responseBody))
-                #responseBody = unicode(responseBody, 'utf-8').decode('utf-8')
 
                 mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                 if mimeType == '':
                     mimeType = httpProxyItemResponse.getInferredMimeType().lower()
 
                 if mimeType == 'json':
-                    #responseBody = responseBody#json.dumps(responseBody, indent=4, ensure_ascii=False, separators=(',', ': '), sort_keys=True).encode('utf-8')
-                     #unicode(responseBody.decode('utf-8'),'utf-8')
-                     self.__stdout.println("json")
+                     responseBody = json.dumps(json.loads(responseBody), indent=4, ensure_ascii=False)
+                     responseBody = ''.join([
+                                    'HTTP/1.1 200 OK\r\n'
+                                    'Content-Type: application/json\r\n',
+                                    '\r\n',
+                                    responseBody])
+                   
+                     self._extender._responseViewer.setMessage(responseBody.encode('utf-8'), False)
                 else:
-                     self.__stdout.println("No json")
-                #self._callbacks.getHelpers().stringToBytes(unicode(responseBody).encode('utf-8'))
-
-                self._extender._responseViewer.setMessage(responseBody, False)
+                     self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
             else:
                 self._extender._responseViewer.setMessage(logEntry._requestResponse.getResponse(), False)
 
