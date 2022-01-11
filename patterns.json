@@ -39,6 +39,11 @@
       },
       {
          "use": true,
+         "type": "KoreanName",
+         "expression": "\"(김|이|박|최|정|강|조|윤|장|임|한|오|서|신|권|황|안|송|전|홍|손|문|백|곽|구|진|엄|방|공|헌|함|염)[가-힣]{1,2}\""
+      },
+      {
+         "use": true,
          "type": "CreditCardtNumber",
          "expression": "\"(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5})\""
       },
@@ -84,11 +89,11 @@
       },
       {
          "use": false,
-         "type": "IPV4Address",
+         "type": "Ipv4Address",
          "expression": "\"(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "MacAddress",
          "expression": "\"([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\""
       },
@@ -113,7 +118,7 @@
          "expression": "\"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=])\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AWSAccessKey",
          "expression": "\"AKIA[0-9A-Z]{16}\""
       },

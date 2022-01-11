@@ -1,40 +1,43 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#
-#     
-#                    Privacy Detector Project
-#
-#                           
-#                        Github : https://github.com/make0day/privacy_detector
-#
-#                        Written by Samuel Koo ( 0day@kakao.com )
-#
-#                                   and
-#
-#                                 Daniel Koo ( reby7146@me.com )
-#
+##########################################################################################
+#                                                                                       #
+#                                                                                       #
+#                       P r i v a c y D e t e c t o r  P r o j e c t                    #
+#                                                                                       #
+#                        Github : https://github.com/make0day/privacy_detector          #
+#                                                                                       #
+#                        Written by Samuel Koo ( 0day@kakao.com )                       #
+#                                                                                       #
+#                                       and                                             #
+#                                                                                       #
+#                                 Daniel Koo ( reby7146@me.com )                        #
+#                                                                                       #
+#########################################################################################
 import sys
 import os
 import json
 import re
 from datetime import datetime
 from threading import Lock
+from unicodedata import normalize
 
 from burp import IBurpExtender, ITab, IHttpListener, IMessageEditorController, IMessageEditorController
 
-from java.awt.event import ActionListener
+from java.awt.event import ActionListener, ItemListener
 from java.awt import Component, Color, Font
 from java.awt import BorderLayout, FlowLayout, GridLayout
-from javax.swing import SwingUtilities
-from javax.swing import JButton,JTable, JLabel, JProgressBar, JTree, ButtonGroup, BorderFactory
+from javax.swing import SwingUtilities, DefaultListModel, ButtonGroup, BorderFactory, ListSelectionModel, DefaultComboBoxModel
+from javax.swing import JButton, JTable, JLabel, JList, JProgressBar, JTree, JCheckBox, JComboBox
 from javax.swing import JPanel, JOptionPane, JScrollPane, JSplitPane, JTabbedPane
 from javax.swing.table import AbstractTableModel
 from java.lang import Thread, Runnable
 from java.lang import *
-from java.util import ArrayList, List
+from java.util import ArrayList, List, Map, HashMap, Hashtable, Vector
 from java.util.regex import *
 from java.io import PrintWriter
 from java.net import URL
+from java.nio.file import Files
 
 #
 # implement IBurpExtender
@@ -49,10 +52,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         try:
             #precompile regex patterns for better performance
             self.__regexs = dict()
+           
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    #self.__stdout.println("[{}] {}".format(pattern['type'], pattern['expression'].encode('utf-8')))
-                    self.__regexs[(re.compile(pattern['expression'].encode('utf-8')))] = pattern['type']
+                    expression = normalize('NFC', unicode(pattern['expression']))
+                    #self.__stdout.println("[+] Loaded Regex rule = {} {}".format(expression, pattern['type']))
+                    self.__regexs[(re.compile(expression))] = pattern['type']
+
         except Exception as e:
             self.__stdout.println(e)
         return
@@ -61,22 +67,37 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     # Load Ruleset file
     #
     def LoadRulesetFile(self):
-        patternFile = None
+        f = None
+        patternFile = ''
+        keys = ''
         try:
             #Loads patterns file
             if os.path.exists("./patterns.json"):
                 f = open("./patterns.json", "r")
+                self.__stdout.println('[+] Load pattern file in local path')
+                keys = f.read()
             else:
-                #url = 'https://github.com/make0day/privacy_detector/blob/main/patterns.json'
-                #response = requests.get(url)
-                f = open("./patterns.json", "r")
-                #f.write(response.text)
+                self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
+                InputStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
+                if InputStream != None:
+                    f = open("./patterns.json", "w+")
+                    downloadedPattern = self._helpers.bytesToString(InputStream.readAllBytes())
+                    downloadedPattern = normalize('NFC', downloadedPattern)
+                    downloadedPattern = unicode(downloadedPattern).encode('utf-8')
+                    f.write(downloadedPattern)
+                    keys = downloadedPattern
+                else:
+                    #Possible?
+                    self.__stdout.println('[-] File download error happend')
 
-            keys = f.read().decode('utf-8')
             patternFile = json.loads(keys)
-            f.close()
+            #self.__stdout.println(patternFile)
+            if f != None:
+                f.close()
+
         except Exception as e:
             self.__stdout.println(e)
+
         return patternFile
 
     #
@@ -100,7 +121,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Coded by Samuel Koo & Daniel Koo")
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
-
         # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
         self.__scanningType = 1
         self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self.__scanningType))
@@ -109,7 +129,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__scanningDepth = 2
         self.__stdout.println("[+] Current Scanning Depth : {}".format(self.__scanningDepth))
 
-        self.__stdout.println("[+] Load PII patters from json file...")
         patternFile = self.LoadRulesetFile()
         self.PrecompilePIIRuleSets(patternFile)
         
@@ -119,7 +138,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # main split pane
         self._splitpane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        self._splitpane.setResizeWeight(0.2)
+        self._splitpane.setResizeWeight(0.5)
 
         # table of log entries
         logTable = Table(self)
@@ -141,17 +160,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         tabs = JTabbedPane()
         #self._requestViewer = callbacks.createMessageEditor(self, False)
         self._responseViewer = callbacks.createMessageEditor(self, False)
-
-        #panelRequest.add(self._requestViewer.getComponent())
-        #panelResponse.add(self._responseViewer.getComponent())
-
-        #self._splitbottompane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
-        #self._splitbottompane.setResizeWeight(0.5)
-
-        #self._splitbottompane.setLeftComponent(panelRequest)
-        #self._splitbottompane.setRightComponent(panelResponse)
-
-        #tabs.addTab("Request", self._requestViewer.getComponent())
         
         tabPaneController = JPanel()
         tabPaneController.setLayout(BorderLayout())
@@ -164,9 +172,30 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         tabs.addTab("Options", tabPaneController)
         btnList = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
 
+        OptionLabel = JLabel('  |  Search option : ')
+        btnList.add(OptionLabel)
+        chkFindAll = JCheckBox("Find All  | ", True)
+        btnList.add(chkFindAll)
+        chkFindAll.addItemListener(chkFindAllClicked(self))
+
+        ScanLabel = JLabel(' Scan Type : ')
+        btnList.add(ScanLabel)
+        scanBox = JComboBox()
+        vt = Vector()
+        vt.add('Quick Scan')
+        vt.add('Deep Scan')
+        vt.add('Full Scan')
+        scanBox.setModel(DefaultComboBoxModel(vt))
+        btnList.add(scanBox)
+        scanBox.addItemListener(scanBoxClicked(self))
+
+        btnParseFullHTTP = JButton("Parse Full history")
+        btnList.add(btnParseFullHTTP,BorderLayout.NORTH)
+        btnParseFullHTTP.setSize(300, 300)
+        btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
 
         btnSendLog = JButton("Send log to the server")
-        btnList.add(btnSendLog,BorderLayout.NORTH)
+        btnList.add(btnSendLog,BorderLayout.EAST)
         btnSendLog.setSize(300, 300)
         btnSendLog.addActionListener(StartSendLog(self))
 
@@ -175,11 +204,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnSaveFile.setSize(300, 300)
         btnSaveFile.addActionListener(StartSaveFile(self))
 
-        btnParseFullHTTP = JButton("Parse Full history")
-        btnList.add(btnParseFullHTTP,BorderLayout.EAST)
-        btnParseFullHTTP.setSize(300, 300)
-        btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
-
         btnClearHistory = JButton("Clear history")
         btnList.add(btnClearHistory,BorderLayout.CENTER)
         btnClearHistory.setSize(300, 300)
@@ -187,7 +211,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         btnAbout = JButton("About Privacy Detector...")
         btnAbout.setSize(300, 300)
-        btnList.add(btnAbout, BorderLayout.WEST)
+        btnList.add(btnAbout)
         btnAbout.addActionListener(AboutActionListener(self))
 
         #btnList.add(titleLabel, BorderLayout.NORTH)
@@ -202,55 +226,85 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extracts privacy information from HTTP responses automatically')
         descriptionLabel.setSize(300, 300)
         PaneCenter.add(descriptionLabel, BorderLayout.CENTER)
+        AuthorLabel = JLabel('Author : Koo Brothers')
+        AuthorLabel.setFont(Font('Heading', Font.BOLD, 15))
+        AuthorLabel.setSize(300, 300)
+        PaneCenter.add(AuthorLabel, BorderLayout.EAST)
 
         tabPaneController.layout.vgap = 20
         PaneCenter.layout.hgap = 20
 
+        self._tabController = tabPaneController
+        self._topHitTable = HashMap()
+        self._HitTablelock = Lock()
+
+        self._topHitMap = JList(Vector(self._topHitTable.keySet()))
+        self._topHitMap.setVisible(True)
+        self._topHitMap.setVisibleRowCount(10)
+        self._topHitMap.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
+
+        self._topHitLogger = JScrollPane(self._topHitMap)
+        self._topHitLogger.preferredSize = 300, 300
+        
+        PaneCenter.add(self._topHitLogger, BorderLayout.SOUTH)
         tabPaneController.add(PaneCenter,BorderLayout.NORTH)
-
-        PaneStatus = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
-        statusLabel = JLabel('Status : ')
-        self._statusValueLabel = JLabel('Listening...')
-        PaneStatus.add(statusLabel)
-        PaneStatus.add(self._statusValueLabel)
-        tabPaneController.add(PaneStatus,BorderLayout.SOUTH)
-
         
         # customize our UI components
         callbacks.customizeUiComponent(self._splitpane)
         callbacks.customizeUiComponent(logTable)
+        callbacks.customizeUiComponent(self._topHitMap)
         callbacks.customizeUiComponent(scrollPane)
-        #callbacks.customizeUiComponent(tabs)
+        callbacks.customizeUiComponent(tabs)
         
         # add the custom tab to Burp's UI
         callbacks.addSuiteTab(self)
         
         # register ourselves as an HTTP listener
         callbacks.registerHttpListener(self)
-        
+
         return
 
+    #
+    # 
+    #
     
     def getTabCaption(self):
         return "Privacy Detector"
+    #
+    # 
+    #
     
     def getUiComponent(self):
         return self._splitpane
-
+    #
+    # 
+    #
+    
     def StartParseFullHTTP(self):
         thread = Thread(StartParseFullHTTPRunnable(self))
         thread.start()
         return
+    #
+    # 
+    #
 
     def StartSendLog(self):
         thread = Thread(StartSendLogRunnable(self))
         thread.start()
         return
 
+    #
+    # 
+    #
+
     def StartSaveFile(self):
         thread = Thread(StartSaveFileRunnable(self))
         thread.start()
         return
+
+    #
+    # 
+    #
 
     def StartClearHistory(self):
         dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?","Privacy Detector", JOptionPane.YES_NO_OPTION)
@@ -258,7 +312,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__stdout.println("StartClearHistory")
 
             self._lock.acquire()
-            #row = self._log.size()
             self._log.clear()
             self.fireTableDataChanged()
             self._lock.release()
@@ -267,15 +320,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self._currentlyDisplayedItem = ''
             self._logTable.validate()
             self._logTable.repaint()
-        return
-
-    def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
-        # create a new log entry with the message details
-        self._lock.acquire()
-        row = self._log.size()
-        self._log.add(LogEntry(tool, requestResponse, host, path, matched, piitype, method))
-        self.fireTableRowsInserted(row, row)
-        self._lock.release()
         return
 
     #
@@ -299,22 +343,28 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             IsPIIContaind = False
+            responseBody = normalize('NFC', responseBody)
+            #self.__stdout.println('check = {}'.format(responseBody))
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
                 if self.__scanningDepth == 1:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
-                        matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                        matched = unicode(matchobj.group().decode('utf-8'))
                         self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                        #Todo check case
+                        self.AddHitEntry(HostProtocol, Path, PIIType, Method)
                         IsPIIContaind = True
                 # Find all elements in the page
                 elif self.__scanningDepth != 1:
                     matchObj_iter = regex.finditer(responseBody)
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
-                            matched = unicode(matchobj.group().decode('utf-8'),'utf-8')
+                            matched = unicode(matchobj.group().decode('utf-8'))
                             self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                            #Todo check case
+                            self.AddHitEntry(HostProtocol, Path, PIIType, Method)
                             IsPIIContaind = True
 
         except Exception as e:
@@ -363,13 +413,15 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+                                #responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
+                            else:
+                                self.__stdout.println("[-] getBodyOffset == 0")
 
-                                IsPIIContaind = self.PIIProcessor(4, responseBody, httpProxyItem)
-                                if IsPIIContaind == True:
-                                    Foundcnt = Foundcnt + 1
+                            IsPIIContaind = self.PIIProcessor(4, responseBody, httpProxyItem)
+                            if IsPIIContaind == True:
+                                Foundcnt = Foundcnt + 1
 
-            #self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
-            self._statusValueLabel.setText("[+] Found {} PIIs from total {} entries...".format(Foundcnt, TotalProxyHistory))
+            self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
 
         except Exception as e:
             self.__stdout.println(e)
@@ -382,6 +434,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
     def SaveFile(self):
         self.__stdout.println("SaveFile func")
+        JOptionPane.showMessageDialog(self._splitpane, 'Not implemented yet')
         return
 
     #
@@ -390,8 +443,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
     def SendLog(self):
         self.__stdout.println("SendLog func")
+        JOptionPane.showMessageDialog(self._splitpane, 'Not implemented yet')
         return
-
 
     #
     # implement IHttpListener
@@ -430,9 +483,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
+                                #responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
+                            else:
+                                #Possible?
+                                self.__stdout.println("[-] getBodyOffset == 0")
 
-                                #self.__stdout.println(responseBody)
-                                self.PIIProcessor(toolFlag, responseBody, messageInfo)
+                            self.PIIProcessor(toolFlag, responseBody, messageInfo)
 
         except Exception as e:
             self.__stdout.println(e)
@@ -448,17 +504,31 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         except:
             return 0
 
+    #
+    # 
+    #
+
     def getColumnCount(self):
         return 7
 
+
+    #
+    # 
+    #
+
     def getColumnName(self, columnIndex):
 
-        columnTitle = ["#", "Method", "Host", "Path", "Matched Pattern", "PII Type", "Time"]
+        columnTitle = ["#", "Method", "Host", "Path", "Matched", "Type", "Time"]
 
         if columnIndex < len(columnTitle):
             return columnTitle[columnIndex]
 
         return ""
+
+
+    #
+    # 
+    #
 
     def getValueAt(self, rowIndex, columnIndex):
         logEntry = self._log.get(rowIndex)
@@ -487,11 +557,95 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def getHttpService(self):
         return self._currentlyDisplayedItem.getHttpService()
 
+    #
+    # 
+    #
+
     def getRequest(self):
         return self._currentlyDisplayedItem.getRequest()
 
+
+    #
+    # 
+    #
+
     def getResponse(self):
         return self._currentlyDisplayedItem.getResponse()
+
+
+    #
+    # 
+    #
+
+    def AddLogEntry(self, tool, requestResponse, host, path, matched, piitype, method):
+        # create a new log entry with the message details
+        self._lock.acquire()
+        row = self._log.size()
+        self._log.add(LogEntry(tool, requestResponse, host, path, matched, piitype, method))
+        self.fireTableRowsInserted(row, row)
+        self._lock.release()
+        return
+
+    #
+    # 
+    #
+
+    def AddHitEntry(self, host, path, piitype, method):
+        key = "{}#{}#{}".format(method,host,path)
+
+        try:
+            row = self._topHitTable.get(key)
+            if row:
+                if row._hit >= 1:
+                    row._hit = row._hit + 1
+                else:
+                    row._hit = 1
+            else:
+                self._HitTablelock.acquire()
+                self._topHitTable.put(key, HitEntry(host, path, piitype, method))
+                self._HitTablelock.release()
+
+            CopyModel = DefaultListModel()
+
+            cnt = 0
+            TopHitList = []
+            for i in self._topHitTable.keySet():
+                cnt = cnt + 1
+                #Case1
+                #Exist in table
+                if row:
+                    if i == key:
+                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                    else:
+                        #Case2
+                        #Not updated - do nothing
+                        CopyRow = self._topHitTable.get(i)
+                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(CopyRow._hit,CopyRow._host,CopyRow._path,CopyRow._method))
+                #Case3
+                #Not exist in table == New item
+                else:
+                    row = self._topHitTable.get(key)
+                    if row:
+                        #Now, Exist (Added new)
+                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                    else:
+                        #Error not possible?
+                        self.__stdout.println("[-] row zero == 0")
+
+            TopHitList.sort(key=lambda fname: int(fname.split(' ')[0]), reverse=True)
+
+            for item in TopHitList:
+                CopyModel.addElement(item)
+
+            self._topHitMap.setModel(CopyModel)
+
+            #self._topHitLogger.validate()
+            #self._topHitLogger.repaint()
+
+        except Exception as e:
+            self.__stdout.println(e)
+
+        return
 
 #
 # extend JTable to handle cell selection
@@ -503,6 +657,10 @@ class Table(JTable):
         self._callbacks = extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
         self.setModel(extender)
+
+    #
+    # 
+    #
     
     def changeSelection(self, row, col, toggle, extend):
     
@@ -515,7 +673,7 @@ class Table(JTable):
             if httpProxyItemResponse.getBodyOffset() != 0:
 
                 responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
-                responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
+                responseBody = responseBody = normalize('NFC', unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8'))
 
                 mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                 if mimeType == '':
@@ -554,7 +712,9 @@ class Table(JTable):
         self._extender._currentlyDisplayedItem = logEntry._requestResponse
         JTable.changeSelection(self, row, col, toggle, extend)
         return
+
     
+
 #
 # class to hold details of each log entry
 #
@@ -570,6 +730,19 @@ class LogEntry:
         self._method = method
         self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
+
+#
+# class to hold details of each hit entry
+#
+
+class HitEntry:
+    def __init__(self, host, path, piitype, method):
+        self._host = host
+        self._path = path
+        self._piitype = piitype
+        self._method = method
+        self._hit = 1
+        #self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
 #
 # class to run thread Full http history
@@ -696,6 +869,45 @@ class StartParseFullHTTP(ActionListener):
                 #self.__stdout.println("StartParseFullHTTP")
                 self._extender.StartParseFullHTTP()
 
+
+#
+# class to handle check box
+#
+
+class chkFindAllClicked(ItemListener):
+
+    def __init__(self, extender):
+        super(chkFindAllClicked, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+
+    def itemStateChanged(self, ItemEvent):
+        #self.__stdout.println("itemStateChanged = {}".format(ItemEvent.getStateChange()==1))
+        if ItemEvent.getStateChange()==1:
+            self.__scanningDepth = 2
+        else:
+            self.__scanningDepth = 1
+
+        self.__stdout.println("[+] Find All Channged = {}".format(self.__scanningDepth))
+
+#
+# class to scan option
+#
+
+class scanBoxClicked(ItemListener):
+
+    def __init__(self, extender):
+        super(scanBoxClicked, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+
+    def itemStateChanged(self, ItemEvent):
+        if ItemEvent.getStateChange()==1:
+            self.__scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
+            self.__stdout.println("[+] Scan Type Channged = {}".format(self.__scanningType))
+
 #
 # class to run thread Full http history
 #
@@ -717,3 +929,8 @@ class AboutActionListener(ActionListener):
             'Mailto: reby7146@me.com or 0day@kakao.com',
             '',
         ]), 'Information - Privacy Detector Burp Plugin 1.0', JOptionPane.INFORMATION_MESSAGE)
+
+#
+# EOF
+#
+    
