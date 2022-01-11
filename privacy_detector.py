@@ -229,7 +229,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extracts privacy information from HTTP responses automatically')
         descriptionLabel.setSize(300, 300)
         PaneCenter.add(descriptionLabel, BorderLayout.CENTER)
-        AuthorLabel = JLabel('Author : Koo Brothers')
+        AuthorLabel = JLabel('Coded by dual5651')
         AuthorLabel.setFont(Font('Heading', Font.BOLD, 15))
         AuthorLabel.setSize(300, 300)
         PaneCenter.add(AuthorLabel, BorderLayout.EAST)
@@ -246,8 +246,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._topHitMap.setVisibleRowCount(10)
         self._topHitMap.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
-        self._topHitLogger = JScrollPane(self._topHitMap)
-        self._topHitLogger.preferredSize = 300, 300
+        self._topHitLogger = JScrollPane(self._topHitMap, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
+        self._topHitLogger.preferredSize = 100, 200
+        self._topHitLogger.setBounds(4, 4, 200, 500);
         
         PaneCenter.add(self._topHitLogger, BorderLayout.SOUTH)
         tabPaneController.add(PaneCenter,BorderLayout.NORTH)
@@ -346,7 +347,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             IsPIIContaind = False
-            responseBody = normalize('NFC', responseBody).decode('utf-8','ignore')
+            responseBody = normalize('NFC', responseBody)
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
