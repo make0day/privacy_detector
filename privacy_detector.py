@@ -24,7 +24,7 @@ from unicodedata import normalize
 
 from burp import IBurpExtender, ITab, IHttpListener, IMessageEditorController, IMessageEditorController
 
-from java.awt.event import ActionListener, ItemListener
+from java.awt.event import ActionListener, ItemListener, MouseListener
 from java.awt import Component, Color, Font
 from java.awt import BorderLayout, FlowLayout, GridLayout
 from javax.swing import SwingUtilities, DefaultListModel, ButtonGroup, BorderFactory, ListSelectionModel, DefaultComboBoxModel
@@ -56,9 +56,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
            
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    expression = normalize('NFC', unicode(pattern['expression'])).decode('utf-8','ignore')
+                    expression = normalize('NFC', unicode(pattern['expression'])) #.decode('utf-8','ignore')
                     #self.__stdout.println(expression)
-                    self.__regexs[(re.compile(expression))] = pattern['type']
+                    self.__regexs[(re.compile(expression.encode('utf-8')))] = pattern['type']
 
         except Exception as e:
             self.__stdout.println(e)
@@ -161,6 +161,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # tabs with request/response viewers
         tabs = JTabbedPane()
+        self._tabs = tabs
         #self._requestViewer = callbacks.createMessageEditor(self, False)
         self._responseViewer = callbacks.createMessageEditor(self, False)
         
@@ -245,6 +246,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._topHitMap.setVisible(True)
         self._topHitMap.setVisibleRowCount(10)
         self._topHitMap.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
+        self._topHitMap.addMouseListener(tableEventHandler(self))
 
         self._topHitLogger = JScrollPane(self._topHitMap, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER)
         self._topHitLogger.preferredSize = 100, 200
@@ -355,9 +357,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
                         matched = unicode(matchobj.group().decode('utf-8'))
-                        self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                        row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                         #Todo check case
-                        self.AddHitEntry(HostProtocol, Path, PIIType, Method)
+                        self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                         IsPIIContaind = True
                 # Find all elements in the page
                 elif self.__scanningDepth != 1:
@@ -365,9 +367,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
                             matched = unicode(matchobj.group().decode('utf-8'))
-                            self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                            row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
-                            self.AddHitEntry(HostProtocol, Path, PIIType, Method)
+                            self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                             IsPIIContaind = True
 
         except Exception as e:
@@ -587,13 +589,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._log.add(LogEntry(tool, requestResponse, host, path, matched, piitype, method))
         self.fireTableRowsInserted(row, row)
         self._lock.release()
-        return
+        return row
 
     #
     # 
     #
 
-    def AddHitEntry(self, host, path, piitype, method):
+    def AddHitEntry(self, host, path, piitype, method, linkedrow):
         key = "{}#{}#{}".format(method,host,path)
 
         try:
@@ -601,11 +603,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             if row:
                 if row._hit >= 1:
                     row._hit = row._hit + 1
+                    row._linkedrow = linkedrow
                 else:
                     row._hit = 1
             else:
                 self._HitTablelock.acquire()
-                self._topHitTable.put(key, HitEntry(host, path, piitype, method))
+                self._topHitTable.put(key, HitEntry(host, path, piitype, method, linkedrow))
                 self._HitTablelock.release()
 
             CopyModel = DefaultListModel()
@@ -739,12 +742,13 @@ class LogEntry:
 #
 
 class HitEntry:
-    def __init__(self, host, path, piitype, method):
+    def __init__(self, host, path, piitype, method, linkedrow):
         self._host = host
         self._path = path
         self._piitype = piitype
         self._method = method
         self._hit = 1
+        self._linkedrow = linkedrow
         #self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
 #
@@ -891,7 +895,6 @@ class chkFindAllClicked(ItemListener):
             self.__scanningDepth = 2
         else:
             self.__scanningDepth = 1
-
         self.__stdout.println("[+] Find All Channged = {}".format(self.__scanningDepth))
 
 #
@@ -910,6 +913,49 @@ class scanBoxClicked(ItemListener):
         if ItemEvent.getStateChange()==1:
             self.__scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
             self.__stdout.println("[+] Scan Type Channged = {}".format(self.__scanningType))
+
+
+#
+# class to handle top list event
+#
+
+class tableEventHandler(MouseListener):
+
+    def __init__(self, extender):
+        super(tableEventHandler, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+
+    def mouseClicked(self, MoustEvent):
+            try:
+                key = re.match(r'\d{1,}\sHits!\s\W\sURL:\s(\S{1,})\s\W\sMethod:\s([A-Z]{1,})', MoustEvent.getSource().getSelectedValue())
+                upart = URL(key.group(1))
+                rkey = "{}#{}".format(key.group(2),key.group(1).replace(upart.path,"#{}".format(upart.path)))
+                #self.__stdout.println("[+] MouseClicked = {}".format(rkey))
+                row = self._extender._topHitTable.get(rkey)
+                if row != None and row._linkedrow != None:
+                    self._extender._logTable.changeSelection(row._linkedrow, 0, 0, 0)
+                    self._extender._tabs.setSelectedComponent(self._extender._responseViewer.getComponent())
+
+            except Exception as e:
+                self.__stdout.println(e)
+
+    def mouseEntered(self, MoustEvent):
+        return
+            #self.__stdout.println("[+] mouseEntered = ")
+
+    def mouseExited(self, MoustEvent):
+        return
+            #self.__stdout.println("[+] mouseExited = ")
+
+    def mousePressed(self, MoustEvent):
+        return
+            #self.__stdout.println("[+] mousePressed = ")
+
+    def mouseReleased(self, MoustEvent):
+        return
+            #self.__stdout.println("[+] mouseReleased = ")
 
 #
 # class to run thread Full http history

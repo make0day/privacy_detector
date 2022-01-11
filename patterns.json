@@ -28,7 +28,7 @@
          "expression": "\"(\\d{3,3})+[-]+(\\d{2,2})+[-]+(\\d{5,5})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "PassportNumber",
          "expression": "\"([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}\""
       },
