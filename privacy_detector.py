@@ -186,7 +186,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         descriptionLabel = JLabel('Privacy Detector is a Burp Suite plugin extracts privacy information from HTTP responses automatically')
         descriptionLabel.setSize(300, 300)
         PaneCenter.add(descriptionLabel, BorderLayout.CENTER)
-        AuthorLabel = JLabel('Coded by dual5651')
+        AuthorLabel = JLabel('Status : Listening...')
         AuthorLabel.setFont(Font('Heading', Font.BOLD, 15))
         AuthorLabel.setSize(300, 300)
         PaneCenter.add(AuthorLabel, BorderLayout.EAST)
