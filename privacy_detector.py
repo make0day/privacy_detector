@@ -51,12 +51,13 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def PrecompilePIIRuleSets(self, patternFile):
         try:
             #precompile regex patterns for better performance
+            self.__stdout.println('[+] Precompile Rulesets')
             self.__regexs = dict()
            
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    expression = normalize('NFC', unicode(pattern['expression']))
-                    #self.__stdout.println("[+] Loaded Regex rule = {} {}".format(expression, pattern['type']))
+                    expression = normalize('NFC', unicode(pattern['expression'])).decode('utf-8','ignore')
+                    #self.__stdout.println(expression)
                     self.__regexs[(re.compile(expression))] = pattern['type']
 
         except Exception as e:
@@ -76,22 +77,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 f = open("./patterns.json", "r")
                 self.__stdout.println('[+] Load pattern file in local path')
                 keys = f.read()
+                #self.__stdout.println(keys)
             else:
                 self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
                 InputStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
                 if InputStream != None:
                     f = open("./patterns.json", "w+")
                     downloadedPattern = self._helpers.bytesToString(InputStream.readAllBytes())
-                    downloadedPattern = normalize('NFC', downloadedPattern)
-                    downloadedPattern = unicode(downloadedPattern).encode('utf-8')
+                    downloadedPattern = normalize('NFC', downloadedPattern).encode('utf-8','ignore')
                     f.write(downloadedPattern)
                     keys = downloadedPattern
+                    #self.__stdout.println(keys)
+                    if downloadedPattern != None:
+                        self.__stdout.println('[+] Downloaded')
                 else:
                     #Possible?
                     self.__stdout.println('[-] File download error happend')
 
             patternFile = json.loads(keys)
-            #self.__stdout.println(patternFile)
             if f != None:
                 f.close()
 
@@ -343,8 +346,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             IsPIIContaind = False
-            responseBody = normalize('NFC', responseBody)
-            #self.__stdout.println('check = {}'.format(responseBody))
+            responseBody = normalize('NFC', responseBody).decode('utf-8','ignore')
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
@@ -673,7 +675,7 @@ class Table(JTable):
             if httpProxyItemResponse.getBodyOffset() != 0:
 
                 responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
-                responseBody = responseBody = normalize('NFC', unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8'))
+                responseBody = responseBody = normalize('NFC', responseBody[httpProxyItemResponse.getBodyOffset():]).decode('utf-8','ignore')
 
                 mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                 if mimeType == '':
