@@ -46,64 +46,6 @@ from java.nio.file import Files
 class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController, AbstractTableModel):
     
     #
-    # Precompile Regex rulesets
-    #
-    def PrecompilePIIRuleSets(self, patternFile):
-        try:
-            #precompile regex patterns for better performance
-            self.__stdout.println('[+] Precompile Rulesets')
-            self.__regexs = dict()
-           
-            for pattern in patternFile['patterns']:
-                if pattern['use'] == True:
-                    expression = normalize('NFC', unicode(pattern['expression'])) #.decode('utf-8','ignore')
-                    self.__regexs[(re.compile(expression.encode('utf-8')))] = pattern['type']
-                    #self.__stdout.println(expression)
-
-        except Exception as e:
-            self.__stdout.println(e)
-        return
-
-    #
-    # Load Ruleset file
-    #
-    def LoadRulesetFile(self):
-        f = None
-        patternFile = ''
-        keys = ''
-        try:
-            #Loads patterns file
-            if os.path.exists("./patterns.json"):
-                f = open("./patterns.json", "r")
-                self.__stdout.println('[+] Load pattern file in local path')
-                keys = f.read()
-                #self.__stdout.println(keys)
-            else:
-                self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
-                InputStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
-                if InputStream != None:
-                    f = open("./patterns.json", "w+")
-                    downloadedPattern = self._helpers.bytesToString(InputStream.readAllBytes())
-                    downloadedPattern = normalize('NFC', downloadedPattern).encode('utf-8','ignore')
-                    f.write(downloadedPattern)
-                    keys = downloadedPattern
-                    #self.__stdout.println(keys)
-                    if downloadedPattern != None:
-                        self.__stdout.println('[+] Downloaded')
-                else:
-                    #Possible?
-                    self.__stdout.println('[-] File download error happend')
-
-            patternFile = json.loads(keys)
-            if f != None:
-                f.close()
-
-        except Exception as e:
-            self.__stdout.println(e)
-
-        return patternFile
-
-    #
     # implement IBurpExtender
     #
     
@@ -129,7 +71,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self._scanningType))
 
         # 1 = Find one item from the page, 1 > = Find all items
-        self._scanningDepth = 2
+        self._scanningDepth = 1
         self.__stdout.println("[+] Current Scanning Depth : {}".format(self._scanningDepth))
 
         # 1 = Do not update top list, 2  = Update top list
@@ -192,7 +134,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         OptionLabel = JLabel('  |  Search : ')
         btnList.add(OptionLabel)
-        chkFindAll = JCheckBox("Find All  | ", True)
+        chkFindAll = JCheckBox("Find All  | ")
         btnList.add(chkFindAll)
         chkFindAll.addItemListener(chkFindAllClicked(self))
 
@@ -342,6 +284,68 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self._logTable.repaint()
         return
 
+
+    #
+    # Precompile Regex rulesets
+    #
+    def PrecompilePIIRuleSets(self, patternFile):
+        try:
+            #precompile regex patterns for better performance
+            self.__stdout.println('[+] Precompile Rulesets')
+            self.__regexs = dict()
+           
+            for pattern in patternFile['patterns']:
+                if pattern['use'] == True:
+                    expression = normalize('NFC', unicode(pattern['expression'], 'utf-8')).encode('utf-8')
+                    self.__regexs[(re.compile(expression))] = pattern['type']
+                    self.__stdout.println("[+] Loaded policy : {}".format(pattern))
+                    #self.__stdout.println(expression)
+                else:
+                    self.__stdout.println("[-] Not use policy : {}".format(pattern))
+
+        except Exception as e:
+            self.__stdout.println(e)
+        return
+
+    #
+    # Load Ruleset file
+    #
+    def LoadRulesetFile(self):
+        f = None
+        patternFile = ''
+        keys = ''
+        try:
+            #Loads patterns file
+            if os.path.exists("./patterns.json"):
+                f = open("./patterns.json", "r")
+                self.__stdout.println('[+] Load pattern file in local path = {}'. format(os.path.abspath(os.getcwd())))
+                keys = f.read()
+                #self.__stdout.println(keys)
+            else:
+                self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
+                InputStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
+                if InputStream != None:
+                    f = open("./patterns.json", "w+")
+                    downloadedPattern = self._helpers.bytesToString(InputStream.readAllBytes())
+                    downloadedPattern = normalize('NFC', downloadedPattern)
+                    f.write(downloadedPattern)
+                    keys = downloadedPattern
+                    #self.__stdout.println(keys)
+                    if downloadedPattern != None:
+                        self.__stdout.println('[+] Downloaded')
+                else:
+                    #Possible?
+                    self.__stdout.println('[-] File download error happend')
+
+            patternFile = json.loads(keys)
+            if f != None:
+                f.close()
+
+        except Exception as e:
+            self.__stdout.println(e)
+
+        return patternFile
+
     #
     # implement IBurpExtender
     #
@@ -370,23 +374,32 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 if self._scanningDepth == 1:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
-                        matched = unicode(matchobj.group().decode('utf-8'))
-                        row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
-                        #Todo check case
-                        if self._updateTopList == 2:
-                            self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
-                        IsPIIContaind = True
-                # Find all elements in the page
-                elif self._scanningDepth == 2:
-                    matchObj_iter = regex.finditer(responseBody)
-                    if matchObj_iter != None:
-                        for matchobj in matchObj_iter:
-                            matched = unicode(matchobj.group().decode('utf-8'))
+                        if matchobj.group(0) != None and matchobj.group(0) != '':
+                            matched = unicode(matchobj.group(0).decode('utf-8', 'ignore'))
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
                             if self._updateTopList == 2:
                                 self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                             IsPIIContaind = True
+                        #else:
+                            #useless
+                            #self.__stdout.println("[-] error in PIIProcessor matchObj group(0) == None")
+
+                # Find all elements in the page
+                elif self._scanningDepth == 2:
+                    matchObj_iter = regex.finditer(responseBody)
+                    if matchObj_iter != None:
+                        for matchobj in matchObj_iter:
+                            if matchobj.group(0) != None and matchobj.group(0) != '':
+                                matched = unicode(matchobj.group(0).decode('utf-8','ignore'))
+                                row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
+                                #Todo check case
+                                if self._updateTopList == 2:
+                                    self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
+                                IsPIIContaind = True
+                            #else:
+                                #useless
+                                #self.__stdout.println("[-] error in PIIProcessor matchObj group(0) == None")
 
         except Exception as e:
             self.__stdout.println(e)
@@ -516,6 +529,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         except Exception as e:
             self.__stdout.println(e)
+
+        return
     
 
     #
@@ -698,7 +713,7 @@ class Table(JTable):
             if httpProxyItemResponse.getBodyOffset() != 0:
 
                 responseBody = self._callbacks.getHelpers().bytesToString(logEntry._requestResponse.getResponse())
-                responseBody = responseBody = normalize('NFC', responseBody[httpProxyItemResponse.getBodyOffset():]).decode('utf-8','ignore')
+                responseBody = responseBody = normalize('NFC', responseBody[httpProxyItemResponse.getBodyOffset():]).decode('utf-8')
 
                 mimeType = httpProxyItemResponse.getStatedMimeType().lower()
                 if mimeType == '':
@@ -973,6 +988,10 @@ class tableEventHandler(MouseListener):
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
+    #
+    # 
+    #
+
     def mouseClicked(self, MoustEvent):
             try:
                 key = re.match(r'\d{1,}\sHits!\s\W\sURL:\s(\S{1,})\s\W\sMethod:\s([A-Z]{1,})', MoustEvent.getSource().getSelectedValue())
@@ -987,17 +1006,33 @@ class tableEventHandler(MouseListener):
             except Exception as e:
                 self.__stdout.println(e)
 
+    #
+    # 
+    #
+
     def mouseEntered(self, MoustEvent):
         return
             #self.__stdout.println("[+] mouseEntered = ")
+
+    #
+    # 
+    #
 
     def mouseExited(self, MoustEvent):
         return
             #self.__stdout.println("[+] mouseExited = ")
 
+    #
+    # 
+    #
+
     def mousePressed(self, MoustEvent):
         return
             #self.__stdout.println("[+] mousePressed = ")
+
+    #
+    # 
+    #
 
     def mouseReleased(self, MoustEvent):
         return
