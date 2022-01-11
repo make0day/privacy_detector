@@ -27,8 +27,9 @@ from burp import IBurpExtender, ITab, IHttpListener, IMessageEditorController, I
 from java.awt.event import ActionListener, ItemListener, MouseListener
 from java.awt import Component, Color, Font
 from java.awt import BorderLayout, FlowLayout, GridLayout
+from java.awt import FileDialog
 from javax.swing import SwingUtilities, DefaultListModel, ButtonGroup, BorderFactory, ListSelectionModel, DefaultComboBoxModel
-from javax.swing import JButton, JTable, JLabel, JList, JProgressBar, JTree, JCheckBox, JComboBox
+from javax.swing import JButton, JTable, JLabel, JList, JProgressBar, JTree, JCheckBox, JComboBox, JFrame
 from javax.swing import JPanel, JOptionPane, JScrollPane, JSplitPane, JTabbedPane
 from javax.swing.table import AbstractTableModel
 from java.lang import Thread, Runnable
@@ -126,9 +127,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         tabs.addTab("Dashboard", tabPaneController)
         btnList = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
 
-        TophitLabel = JLabel('  |  Update Top Hit : ')
+        TophitLabel = JLabel('  |  Top list : ')
         btnList.add(TophitLabel)
-        chkTophit = JCheckBox("On/Off", True)
+        chkTophit = JCheckBox("Refresh", True)
         btnList.add(chkTophit)
         chkTophit.addItemListener(chkTophitClicked(self))
 
@@ -466,12 +467,44 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         return
 
     #
-    # implement 
+    # implement Save log
     #
 
     def SaveFile(self):
-        self.__stdout.println("SaveFile func")
-        JOptionPane.showMessageDialog(self._splitpane, 'Not implemented yet')
+        try:
+
+            self.__stdout.println("SaveFile func")
+            ancestor = SwingUtilities.getWindowAncestor(self._splitpane)
+            saveDialog = FileDialog(ancestor, "Privacy Detector", FileDialog.SAVE)
+            saveDialog.setDirectory(os.path.abspath(os.getcwd()))
+            saveDialog.setFilenameFilter(awtFilter)
+            saveDialog.setVisible(True)
+            dir = saveDialog.getDirectory()
+            file = saveDialog.getFile()
+            fullpath = "{}{}".format(dir,file)
+
+            #JFileChooser jFileChooser = new JFileChooser();
+            #jFileChooser.setSelectedFile(new File("fileToSave.txt"));
+            #jFileChooser.showSaveDialog(parent);
+
+            with open(fullpath, 'w+') as f:
+                f.write('Method,Host,Path,Type,Note\n')
+                for key in self._topHitTable.keySet():
+                    line = self._topHitTable.get(key)
+                    f.write("{},{},{},{},TopHit={}\n".format(line._method,line._host,line._path,line._piitype,line._hit))
+
+                #self._lock.acquire()
+                
+                for item in self._log:
+                    f.write("{},{},{},{},Matched={}\n".format(item._method,item._host,item._path,item._piitype,item._matched))
+
+                #self._lock.release()
+
+            JOptionPane.showMessageDialog(self._splitpane, fullpath)
+
+        except Exception as e:
+            self.__stdout.println(e)
+
         return
 
     #
@@ -647,10 +680,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
             CopyModel = DefaultListModel()
 
-            cnt = 0
             TopHitList = []
             for i in self._topHitTable.keySet():
-                cnt = cnt + 1
                 #Case1
                 #Exist in table
                 if row:
@@ -804,7 +835,7 @@ class StartParseFullHTTPRunnable(Runnable):
         self._extender._logTable.setAutoCreateRowSorter(True)
         self._extender._logTable.validate()
         self._extender._logTable.repaint()
-
+        return
 #
 # class to run thread Full http history
 #
@@ -820,7 +851,7 @@ class StartSaveFileRunnable(Runnable):
     def run(self):
         self.__stdout.println("From run StartSaveFileRunnable")
         self._extender.SaveFile()
-
+        return
 #
 # class to run thread Full http history
 #
@@ -836,7 +867,7 @@ class StartSendLogRunnable(Runnable):
     def run(self):
         self.__stdout.println("From run StartSendLogRunnable")
         self._extender.SendLog()
-
+        return
 
 #
 # class to run thread Save File
@@ -854,7 +885,7 @@ class StartSaveFile(ActionListener):
     def actionPerformed(self, event):
         self.__stdout.println("actionPerformed")
         self._extender.StartSaveFile()
-
+        return
 #
 # class to run thread Send Log
 #
@@ -871,7 +902,7 @@ class StartSendLog(ActionListener):
     def actionPerformed(self, event):
         self.__stdout.println("actionPerformed")
         self._extender.StartSendLog()
-
+        return
 #
 # class to run Clear history
 #
@@ -888,7 +919,7 @@ class StartClearHistory(ActionListener):
     def actionPerformed(self, event):
         #self.__stdout.println("actionPerformed")
         self._extender.StartClearHistory()
-
+        return
 #
 # class to run thread Full http history
 #
@@ -909,7 +940,7 @@ class StartParseFullHTTP(ActionListener):
             if len(self._callbacks.getProxyHistory()) > 0:
                 #self.__stdout.println("StartParseFullHTTP")
                 self._extender.StartParseFullHTTP()
-
+        return
 
 #
 # class to handle check box
@@ -933,7 +964,7 @@ class chkFindAllClicked(ItemListener):
         else:
             self._extender._scanningDepth = 1
         self.__stdout.println("[+] Find All Channged = {}".format(self._extender._scanningDepth))
-
+        return
 #
 # class to scan option
 #
@@ -950,7 +981,7 @@ class scanBoxClicked(ItemListener):
         if ItemEvent.getStateChange()==1:
             self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
             self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
-
+        return
 
 #
 # class to scan option
@@ -975,7 +1006,7 @@ class chkTophitClicked(ItemListener):
         else:
             self._extender._updateTopList = 1
         self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
-
+        return
 #
 # class to handle top list event
 #
@@ -993,18 +1024,19 @@ class tableEventHandler(MouseListener):
     #
 
     def mouseClicked(self, MoustEvent):
-            try:
-                key = re.match(r'\d{1,}\sHits!\s\W\sURL:\s(\S{1,})\s\W\sMethod:\s([A-Z]{1,})', MoustEvent.getSource().getSelectedValue())
-                upart = URL(key.group(1))
-                rkey = "{}#{}".format(key.group(2),key.group(1).replace(upart.path,"#{}".format(upart.path)))
-                #self.__stdout.println("[+] MouseClicked = {}".format(rkey))
-                row = self._extender._topHitTable.get(rkey)
-                if row != None and row._linkedrow != None:
-                    self._extender._logTable.changeSelection(row._linkedrow, 0, 0, 0)
-                    self._extender._tabs.setSelectedComponent(self._extender._responseViewer.getComponent())
+        try:
+            key = re.match(r'\d{1,}\sHits!\s\W\sURL:\s(\S{1,})\s\W\sMethod:\s([A-Z]{1,})', MoustEvent.getSource().getSelectedValue())
+            upart = URL(key.group(1))
+            rkey = "{}#{}".format(key.group(2),key.group(1).replace(upart.path,"#{}".format(upart.path)))
+            #self.__stdout.println("[+] MouseClicked = {}".format(rkey))
+            row = self._extender._topHitTable.get(rkey)
+            if row != None and row._linkedrow != None:
+                self._extender._logTable.changeSelection(row._linkedrow, 0, 0, 0)
+                self._extender._tabs.setSelectedComponent(self._extender._responseViewer.getComponent())
 
-            except Exception as e:
-                self.__stdout.println(e)
+        except Exception as e:
+            self.__stdout.println(e)
+        return
 
     #
     # 
@@ -1059,7 +1091,7 @@ class AboutActionListener(ActionListener):
             'Mailto: reby7146@me.com or 0day@kakao.com',
             '',
         ]), 'Information - Privacy Detector Burp Plugin 1.0', JOptionPane.INFORMATION_MESSAGE)
-
+        return
 #
 # EOF
 #
