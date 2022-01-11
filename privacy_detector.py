@@ -57,8 +57,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
                     expression = normalize('NFC', unicode(pattern['expression'])) #.decode('utf-8','ignore')
-                    #self.__stdout.println(expression)
                     self.__regexs[(re.compile(expression.encode('utf-8')))] = pattern['type']
+                    #self.__stdout.println(expression)
 
         except Exception as e:
             self.__stdout.println(e)
@@ -125,12 +125,20 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
         # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
-        self.__scanningType = 1
-        self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self.__scanningType))
+        self._scanningType = 1
+        self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self._scanningType))
 
         # 1 = Find one item from the page, 1 > = Find all items
-        self.__scanningDepth = 2
-        self.__stdout.println("[+] Current Scanning Depth : {}".format(self.__scanningDepth))
+        self._scanningDepth = 2
+        self.__stdout.println("[+] Current Scanning Depth : {}".format(self._scanningDepth))
+
+        # 1 = Do not update top list, 2  = Update top list
+        self._updateTopList = 2
+        self.__stdout.println("[+] Update top Hit List : {}".format(self._updateTopList))
+
+        # 1 = Do not send log to the siem server, 2 = Send log to the siem server asynchronously
+        self.__autoSendLogToSiem = 1
+        self.__stdout.println("[+] Auto send log to the server : {}".format(self.__autoSendLogToSiem))
 
         patternFile = self.LoadRulesetFile()
         self.PrecompilePIIRuleSets(patternFile)
@@ -173,16 +181,22 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._splitpane.setRightComponent(tabs)
         #self._splitpane.setRightComponent(self._responseViewer.getComponent())
 
-        tabs.addTab("Options", tabPaneController)
+        tabs.addTab("Dashboard", tabPaneController)
         btnList = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
 
-        OptionLabel = JLabel('  |  Search option : ')
+        TophitLabel = JLabel('  |  Update Top Hit : ')
+        btnList.add(TophitLabel)
+        chkTophit = JCheckBox("On/Off", True)
+        btnList.add(chkTophit)
+        chkTophit.addItemListener(chkTophitClicked(self))
+
+        OptionLabel = JLabel('  |  Search : ')
         btnList.add(OptionLabel)
         chkFindAll = JCheckBox("Find All  | ", True)
         btnList.add(chkFindAll)
         chkFindAll.addItemListener(chkFindAllClicked(self))
 
-        ScanLabel = JLabel(' Scan Type : ')
+        ScanLabel = JLabel(' Scan : ')
         btnList.add(ScanLabel)
         scanBox = JComboBox()
         vt = Vector()
@@ -194,24 +208,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         scanBox.addItemListener(scanBoxClicked(self))
 
         btnParseFullHTTP = JButton("Parse Full history")
-        btnList.add(btnParseFullHTTP,BorderLayout.NORTH)
+        btnList.add(btnParseFullHTTP)
         btnParseFullHTTP.setSize(300, 300)
         btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
 
-        btnSendLog = JButton("Send log to the server")
-        btnList.add(btnSendLog,BorderLayout.EAST)
-        btnSendLog.setSize(300, 300)
-        btnSendLog.addActionListener(StartSendLog(self))
+        btnClearHistory = JButton("Clear history")
+        btnList.add(btnClearHistory)
+        btnClearHistory.setSize(300, 300)
+        btnClearHistory.addActionListener(StartClearHistory(self))
 
         btnSaveFile = JButton("Save log as a file")
         btnList.add(btnSaveFile,BorderLayout.SOUTH)
         btnSaveFile.setSize(300, 300)
         btnSaveFile.addActionListener(StartSaveFile(self))
 
-        btnClearHistory = JButton("Clear history")
-        btnList.add(btnClearHistory,BorderLayout.CENTER)
-        btnClearHistory.setSize(300, 300)
-        btnClearHistory.addActionListener(StartClearHistory(self))
+        btnSendLog = JButton("Configure Server...")
+        btnList.add(btnSendLog)
+        btnSendLog.setSize(300, 300)
+        btnSendLog.addActionListener(StartSendLog(self))
 
         btnAbout = JButton("About Privacy Detector...")
         btnAbout.setSize(300, 300)
@@ -353,23 +367,25 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
-                if self.__scanningDepth == 1:
+                if self._scanningDepth == 1:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
                         matched = unicode(matchobj.group().decode('utf-8'))
                         row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                         #Todo check case
-                        self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
+                        if self._updateTopList == 2:
+                            self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                         IsPIIContaind = True
                 # Find all elements in the page
-                elif self.__scanningDepth != 1:
+                elif self._scanningDepth == 2:
                     matchObj_iter = regex.finditer(responseBody)
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
                             matched = unicode(matchobj.group().decode('utf-8'))
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
-                            self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
+                            if self._updateTopList == 2:
+                                self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                             IsPIIContaind = True
 
         except Exception as e:
@@ -408,9 +424,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
-                        if  (self.__scanningType == 1 and mimeType == 'json') or \
-                            (self.__scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
-                            (self.__scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
+                        if  (self._scanningType == 1 and mimeType == 'json') or \
+                            (self._scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
+                            (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(httpProxyItem.getResponse())
@@ -425,6 +441,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             IsPIIContaind = self.PIIProcessor(4, responseBody, httpProxyItem)
                             if IsPIIContaind == True:
                                 Foundcnt = Foundcnt + 1
+                        else:
+                            #Possible?
+                            self.__stdout.println("[-] Scan type != none of 1-3")
 
             self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
 
@@ -479,9 +498,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                         #self.__stdout.println("mimeType = {}".format(mimeType))
 
-                        if  (self.__scanningType == 1 and mimeType == 'json') or \
-                            (self.__scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
-                            (self.__scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
+                        if  (self._scanningType == 1 and mimeType == 'json') or \
+                            (self._scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
+                            (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse())
@@ -892,10 +911,13 @@ class chkFindAllClicked(ItemListener):
     def itemStateChanged(self, ItemEvent):
         #self.__stdout.println("itemStateChanged = {}".format(ItemEvent.getStateChange()==1))
         if ItemEvent.getStateChange()==1:
-            self.__scanningDepth = 2
+            if self._extender._scanningDepth == 2:
+                self._extender._scanningDepth = 1
+            else:
+                self._extender._scanningDepth = 2
         else:
-            self.__scanningDepth = 1
-        self.__stdout.println("[+] Find All Channged = {}".format(self.__scanningDepth))
+            self._extender._scanningDepth = 1
+        self.__stdout.println("[+] Find All Channged = {}".format(self._extender._scanningDepth))
 
 #
 # class to scan option
@@ -911,9 +933,33 @@ class scanBoxClicked(ItemListener):
 
     def itemStateChanged(self, ItemEvent):
         if ItemEvent.getStateChange()==1:
-            self.__scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
-            self.__stdout.println("[+] Scan Type Channged = {}".format(self.__scanningType))
+            self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
+            self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
 
+
+#
+# class to scan option
+#
+
+class chkTophitClicked(ItemListener):
+
+    def __init__(self, extender):
+        super(chkTophitClicked, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+
+    def itemStateChanged(self, ItemEvent):
+        if ItemEvent.getStateChange()==1:
+            if self._extender._updateTopList == 1:
+                self._extender._updateTopList = 2
+                #self._extender._topHitLogger.add(self._extender._topHitMap)
+            else: 
+                self._extender._updateTopList = 1
+                #self._extender._topHitLogger.remove(self._extender._topHitMap)
+        else:
+            self._extender._updateTopList = 1
+        self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
 
 #
 # class to handle top list event
