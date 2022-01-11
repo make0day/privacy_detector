@@ -149,7 +149,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnList.add(scanBox)
         scanBox.addItemListener(scanBoxClicked(self))
 
-        btnParseFullHTTP = JButton("Parse Full history")
+        btnParseFullHTTP = JButton("Parse full history")
         btnList.add(btnParseFullHTTP)
         btnParseFullHTTP.setSize(300, 300)
         btnParseFullHTTP.addActionListener(StartParseFullHTTP(self))
@@ -159,17 +159,17 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnClearHistory.setSize(300, 300)
         btnClearHistory.addActionListener(StartClearHistory(self))
 
-        btnSaveFile = JButton("Save log as a file")
+        btnSaveFile = JButton("Save to file")
         btnList.add(btnSaveFile,BorderLayout.SOUTH)
         btnSaveFile.setSize(300, 300)
         btnSaveFile.addActionListener(StartSaveFile(self))
 
-        btnSendLog = JButton("Configure Server...")
+        btnSendLog = JButton("Config Server")
         btnList.add(btnSendLog)
         btnSendLog.setSize(300, 300)
         btnSendLog.addActionListener(StartSendLog(self))
 
-        btnAbout = JButton("About Privacy Detector...")
+        btnAbout = JButton("About...")
         btnAbout.setSize(300, 300)
         btnList.add(btnAbout)
         btnAbout.addActionListener(AboutActionListener(self))
