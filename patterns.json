@@ -1,6 +1,8 @@
 {
-   "updated": "2022-01-08",
-   "author": "Samuel koo & Daniel Koo brothers",
+   "updated": "2022-01-12",
+   "author": "Samuel koo & Daniel Koo Brothers",
+   "description": "This json file is a part of project Privacy Detector",
+   "github": "https://github.com/make0day/privacy_detector",
    "patterns": [
       {
          "use": true,
@@ -34,8 +36,8 @@
       },
       {
          "use": true,
-         "type": "RoadAddress2",
-         "expression": "(?P<dual5651>[가-힣]{1,5}[읍면동가길리통]\\s{0,2}[\\-\\d]{3,6}\\s{0,2}[가-힣]{0,15})"
+         "type": "RoadAddress",
+         "expression": "(?P<dual5651>[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}([가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}|[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}[\\d]{3,6}-[\\d]{0,3}\\s{0,2})+[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}[\\d]{3,6}-[\\d]{0,3}\\s{0,2})"
       },
       {
          "use": false,
