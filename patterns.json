@@ -5,177 +5,177 @@
       {
          "use": true,
          "type": "MobileNumber",
-         "expression": "\"010-?([0-9]{3,4})-?([0-9]{4})\""
+         "expression": "\"(?P<dual5651>010-?([0-9]{3,4})-?([0-9]{4}))\""
       },
       {
          "use": true,
          "type": "PhoneNumber",
-         "expression": "\"0[2-6][1-5]?-[2-9]\\d{2,3}-\\d{4}\""
+         "expression": "\"(?P<dual5651>0[2-6][1-5]?-[2-9]\\d{2,3}-\\d{4})\""
       },
       {
          "use": true,
          "type": "EmailAddress",
-         "expression": "\"([a-z0-9_\\.-]{1,10})@([\\da-z\\.-]+)\\.([^pjg]{1}[a-z\\.]{2,6})\""
+         "expression": "\"(?P<dual5651>([a-z0-9_\\.-]{1,10})@([\\da-z\\.-]+)\\.([^pjg]{1}[a-z\\.]{2,6}))\""
       },
       {
          "use": true,
          "type": "ResidentRegistrationNumber",
-         "expression": "\"((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-([1-4]\\d{6})\""
+         "expression": "\"(?P<dual5651>((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-([1-4]\\d{6}))\""
       },
       {
          "use": true,
          "type": "BusinessRegistrationNumber",
-         "expression": "\"(\\d{3,3})+[-]+(\\d{2,2})+[-]+(\\d{5,5})\""
+         "expression": "\"(?P<dual5651>(\\d{3,3})+[-]+(\\d{2,2})+[-]+(\\d{5,5}))\""
       },
       {
          "use": false,
          "type": "PassportNumber",
-         "expression": "\"([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8}\""
+         "expression": "\"(?P<dual5651>([b-zB-Z]{1}|[b-zB-Z]{2})\\d{8})\""
       },
       {
          "use": true,
          "type": "RoadAddress2",
-         "expression": "[가-힣]{1,5}[시군구도읍면동가길리통]{1}[[:space:]]{1}[가-힣]{1,5}[시군구도읍면동가길리통]{1}[[:space:]]{1}[\\d\\-]{3,6}"
+         "expression": "(?P<dual5651>[가-힣]{1,5}[읍면동가길리통]\\s{0,2}[\\-\\d]{3,6}\\s{0,2}[가-힣]{0,15})"
       },
       {
          "use": false,
          "type": "KoreanName",
-         "expression": "\"(김|이|박|최|정|강|조|윤|장|임|한|오|서|신|권|황|안|송|전|홍|손|문|백|곽|구|진|엄|방|공|헌|함|염)[가-힣]{1,2}\""
+         "expression": "\"(?P<dual5651>(김|이|박|최|정|강|조|윤|장|임|한|오|서|신|권|황|안|송|전|홍|손|문|백|곽|구|진|엄|방|공|헌|함|염)[가-힣]{1,2})\""
       },
       {
          "use": true,
          "type": "CreditCardtNumber",
-         "expression": "\"(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5})\""
+         "expression": "\"(?P<dual5651>(([3-6]|9)\\d{3}-\\d{4}-\\d{4}-(\\d{4}|\\d{3})|37\\d{2}-\\d{6}-\\d{5}))\""
       },
       {
          "use": true,
          "type": "CreditCardtNumber2",
-         "expression": "\"[34569][0-9]{3}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4}\""
+         "expression": "\"(?P<dual5651>[34569][0-9]{3}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{4})\""
       },
       {
          "use": true,
          "type": "MasterCardtNumber",
-         "expression": "\"5[1-5]\\d{14}\""
+         "expression": "\"(?P<dual5651>5[1-5]\\d{14})\""
       },
       {
          "use": true,
          "type": "VisaCardtNumber",
-         "expression": "\"4\\d{12}(\\d{3})?\""
+         "expression": "\"(?P<dual5651>4\\d{12}(\\d{3})?)\""
       },
       {
          "use": true,
          "type": "AmexCardtNumber",
-         "expression": "\"3[47]\\d{13}\""
+         "expression": "\"(?P<dual5651>3[47]\\d{13})\""
       },
       {
          "use": true,
          "type": "DriverLicenseNumber",
-         "expression": "\"(\\d{2}-\\d{2}-\\d{6}-\\d{2})\""
+         "expression": "\"(?P<dual5651>(\\d{2}-\\d{2}-\\d{6}-\\d{2}))\""
       },
       {
          "use": true,
          "type": "DriverLicenseNumber2",
-         "expression": "\"[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9]{2}\""
+         "expression": "\"(?P<dual5651>[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9]{2})\""
       },
       {
          "use": true,
          "type": "BankAccountNumber",
-         "expression": "\"([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-])\""
+         "expression": "\"(?P<dual5651>([0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-]))\""
       },
       {
          "use": true,
          "type": "BankAccountNumber2",
-         "expression": "\"([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6})\""
+         "expression": "\"(?P<dual5651>([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6}))\""
       },
       {
          "use": false,
          "type": "Ipv4Address",
-         "expression": "\"(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}\""
+         "expression": "\"(?P<dual5651>(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})\""
       },
       {
          "use": true,
          "type": "MacAddress",
-         "expression": "\"([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\""
+         "expression": "\"(?P<dual5651>([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})\""
       },
       {
          "use": false,
          "type": "AccessKeyType1",
-         "expression": "\"([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12})\""
+         "expression": "\"(?P<dual5651>([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}))\""
       },
       {
          "use": true,
          "type": "NationalInsuranceNumber",
-         "expression": "\"[1257][-~.[:space:]][0-9]{10}\""
+         "expression": "\"(?P<dual5651>[1257][-~.[:space:]][0-9]{10})\""
       },
       {
          "use": true,
          "type": "ForeinerRegistrationNumber",
-         "expression": "\"([01][0-9]{5}[[:space:]~-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})\""
+         "expression": "\"(?P<dual5651>([01][0-9]{5}[[:space:]~-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6}))\""
       },
       {
          "use": false,
          "type": "AWSSessionToken",
-         "expression": "\"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=])\""
+         "expression": "\"(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=]))\""
       },
       {
          "use": true,
          "type": "AWSAccessKey",
-         "expression": "\"AKIA[0-9A-Z]{16}\""
+         "expression": "\"(?P<dual5651>AKIA[0-9A-Z]{16})\""
       },
       {
          "use": false,
          "type": "TencentSecretId",
-         "expression": "\"AKID[A-Za-z0-9]{34}\""
+         "expression": "\"(?P<dual5651>AKID[A-Za-z0-9]{34})\""
       },
       {
          "use": false,
          "type": "AWSSecretKey",
-         "expression": "\"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])\""
+         "expression": "\"(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=]))\""
       },
       {
          "use": false,
          "type": "PrivateSecureKey",
-         "expression": "\"-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY\""
+         "expression": "\"(?P<dual5651>-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY)\""
       },
       {
          "use": false,
          "type": "AuthorizationBasic",
-         "expression": "\"Basic\\s[a-zA-Z0-9+\\/]+\\=*\""
+         "expression": "\"(?P<dual5651>Basic\\s[a-zA-Z0-9+\\/]+\\=*)\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer1",
-         "expression": "\"Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12}\""
+         "expression": "\"(?P<dual5651>Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer2",
-         "expression": "\"Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?\""
+         "expression": "\"(?P<dual5651>Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?)\""
       },
       {
          "use": false,
          "type": "AuthorizationAPI",
-         "expression": "\"api[key|\\s*]+[a-zA-Z0-9_\\-]+\""
+         "expression": "\"(?P<dual5651>api[key|\\s*]+[a-zA-Z0-9_\\-]+)\""
       },
       {
          "use": false,
          "type": "GoogleOAuthToken",
-         "expression": "\"ya29\\.[0-9A-Za-z\\\\-_]+\""
+         "expression": "\"(?P<dual5651>ya29\\.[0-9A-Za-z\\\\-_]+)\""
       },
       {
          "use": false,
          "type": "GoogleOAuthKey",
-         "expression": "\"[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com\""
+         "expression": "\"(?P<dual5651>[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com)\""
       },
       {
          "use": false,
          "type": "GoogleAPIToken",
-         "expression": "\"AIza[0-9A-Za-z-_]{35}\""
+         "expression": "\"(?P<dual5651>AIza[0-9A-Za-z-_]{35})\""
       },
       {
          "use": false,
          "type": "FacebookAuthToken",
-         "expression": "\"EAACEdEose0cBA[0-9A-Za-z]+\""
+         "expression": "\"(?P<dual5651>EAACEdEose0cBA[0-9A-Za-z]+)\""
       }
    ]
 }

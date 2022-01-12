@@ -375,8 +375,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 if self._scanningDepth == 1:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
-                        if matchobj.group(0) != None and matchobj.group(0) != '':
-                            matched = unicode(matchobj.group(0).decode('utf-8', 'ignore'))
+                        if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
+                            matched = unicode(matchobj.group('dual5651').decode('utf-8', 'ignore'))
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
                             if self._updateTopList == 2:
@@ -391,8 +391,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     matchObj_iter = regex.finditer(responseBody)
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
-                            if matchobj.group(0) != None and matchobj.group(0) != '':
-                                matched = unicode(matchobj.group(0).decode('utf-8','ignore'))
+                            if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
+                                matched = unicode(matchobj.group('dual5651').decode('utf-8','ignore'))
                                 row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                                 #Todo check case
                                 if self._updateTopList == 2:
