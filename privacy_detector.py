@@ -36,9 +36,9 @@ from java.lang import Thread, Runnable
 from java.lang import *
 from java.util import ArrayList, List, Map, HashMap, Hashtable, Vector
 from java.util.regex import *
-from java.io import File, PrintWriter, FileWriter, OutputStreamWriter, FileOutputStream
+from java.io import File, PrintWriter, FileWriter, OutputStreamWriter, FileOutputStream, InputStreamReader, FileInputStream
 from java.net import URL
-from java.nio.file import Files
+from java.nio.file import Files, Paths
 
 #
 # implement IBurpExtender
@@ -315,36 +315,43 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
     # Load Ruleset file
     #
+
     def LoadRulesetFile(self):
-        f = None
         patternFile = ''
         keys = ''
         try:
             #Loads patterns file
-            if os.path.exists("./patterns.json"):
-                f = open("./patterns.json", "r")
-                self.__stdout.println('[+] Load pattern file in local path = {}'. format(os.path.abspath(os.getcwd())))
-                keys = f.read()
-                #self.__stdout.println(keys)
+            patterFilePath = ''.join([os.path.abspath(os.getcwd()), '/patterns.json'])
+            if os.path.exists(patterFilePath):
+                #f = open(patterFilePath, "r")
+                self.__stdout.println('[+] Load pattern file in local path = {}'.format(os.path.abspath(os.getcwd())))
+                keys = self._helpers.bytesToString(Files.readAllBytes(Paths.get(patterFilePath)))
+                keys = unicode(keys, 'utf-8')
             else:
                 self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
-                InputStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
-                if InputStream != None:
-                    f = open("./patterns.json", "w+")
-                    downloadedPattern = self._helpers.bytesToString(InputStream.readAllBytes())
+                urlStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
+                if urlStream != None:
+                    #f = open("./patterns.json", "w+")
+                    downloadedPattern = self._helpers.bytesToString(urlStream.readAllBytes())
                     downloadedPattern = normalize('NFC', downloadedPattern)
-                    f.write(downloadedPattern)
+                    #f.write(downloadedPattern)
+
+                    outStream = OutputStreamWriter(FileOutputStream(patterFilePath), 'UTF-8')
+                    outStream.write(unicode(downloadedPattern, 'utf-8').decode('utf-8'))
+
                     keys = downloadedPattern
                     #self.__stdout.println(keys)
+
+                    if outStream != None:
+                        outStream.close()
                     if downloadedPattern != None:
+                        urlStream.close()
                         self.__stdout.println('[+] Downloaded')
                 else:
                     #Possible?
                     self.__stdout.println('[-] File download error happend')
 
             patternFile = json.loads(keys)
-            if f != None:
-                f.close()
 
         except Exception as e:
             self.__stdout.println(e)
