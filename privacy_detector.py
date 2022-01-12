@@ -76,7 +76,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self._scanningType))
 
         # 1 = Find one item from the page, 1 > = Find all items
-        self._scanningDepth = 1
+        self._scanningDepth = 2
         self.__stdout.println("[+] Current Scanning Depth : {}".format(self._scanningDepth))
 
         # 1 = Do not update top list, 2  = Update top list
@@ -139,7 +139,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         OptionLabel = JLabel('  |  Search : ')
         btnList.add(OptionLabel)
-        chkFindAll = JCheckBox("Find All  | ")
+        chkFindAll = JCheckBox("Find All  | ", True)
         btnList.add(chkFindAll)
         chkFindAll.addItemListener(chkFindAllClicked(self))
 
@@ -303,10 +303,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 if pattern['use'] == True:
                     expression = normalize('NFC', unicode(pattern['expression'], 'utf-8')).encode('utf-8')
                     self.__regexs[(re.compile(expression))] = pattern['type']
-                    self.__stdout.println("[+] Loaded policy : {}".format(pattern))
+                    #self.__stdout.println("[+] Loaded policy : {}".format(pattern))
                     #self.__stdout.println(expression)
-                else:
-                    self.__stdout.println("[-] Not use policy : {}".format(pattern))
+                #else:
+                    #self.__stdout.println("[-] Not use policy : {}".format(pattern))
 
         except Exception as e:
             self.__stdout.println(e)
