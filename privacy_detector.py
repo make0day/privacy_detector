@@ -326,21 +326,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 #f = open(patterFilePath, "r")
                 self.__stdout.println('[+] Load pattern file in local path = {}'.format(os.path.abspath(os.getcwd())))
                 keys = self._helpers.bytesToString(Files.readAllBytes(Paths.get(patterFilePath)))
-                keys = unicode(keys, 'utf-8')
+                keys = unicode(keys, 'utf-8').decode('utf-8')
             else:
                 self.__stdout.println('[-] Pattern file not exist in the local path, download a new one')
                 urlStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/patterns.json').openStream()
                 if urlStream != None:
-                    #f = open("./patterns.json", "w+")
                     downloadedPattern = self._helpers.bytesToString(urlStream.readAllBytes())
                     downloadedPattern = normalize('NFC', downloadedPattern)
-                    #f.write(downloadedPattern)
-
+                    downloadedPattern = unicode(downloadedPattern, 'utf-8').decode('utf-8')
+                    self.__stdout.println(downloadedPattern)
                     outStream = OutputStreamWriter(FileOutputStream(patterFilePath), 'UTF-8')
-                    outStream.write(unicode(downloadedPattern, 'utf-8').decode('utf-8'))
+                    outStream.write(unicode(downloadedPattern))
 
                     keys = downloadedPattern
-                    #self.__stdout.println(keys)
 
                     if outStream != None:
                         outStream.close()
