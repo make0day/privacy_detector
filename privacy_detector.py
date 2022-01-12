@@ -36,7 +36,7 @@ from java.lang import Thread, Runnable
 from java.lang import *
 from java.util import ArrayList, List, Map, HashMap, Hashtable, Vector
 from java.util.regex import *
-from java.io import PrintWriter
+from java.io import File, PrintWriter, FileWriter, OutputStreamWriter, FileOutputStream
 from java.net import URL
 from java.nio.file import Files
 
@@ -59,6 +59,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         
         # set our extension name
         callbacks.setExtensionName("Privacy Detector")
+
+        #set encoding as utf-8
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
 
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
         #self.__stdout.setCharacterEncoding("UTF-8")  
@@ -473,34 +477,39 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def SaveFile(self):
         try:
 
-            self.__stdout.println("SaveFile func")
+            #self.__stdout.println("SaveFile func")
             ancestor = SwingUtilities.getWindowAncestor(self._splitpane)
-            saveDialog = FileDialog(ancestor, "Privacy Detector", FileDialog.SAVE)
+            saveDialog = FileDialog(ancestor, "Privacy Detector - Save Log", FileDialog.SAVE)
             saveDialog.setDirectory(os.path.abspath(os.getcwd()))
-            saveDialog.setFilenameFilter(awtFilter)
             saveDialog.setVisible(True)
             dir = saveDialog.getDirectory()
             file = saveDialog.getFile()
-            fullpath = "{}{}".format(dir,file)
 
-            #JFileChooser jFileChooser = new JFileChooser();
-            #jFileChooser.setSelectedFile(new File("fileToSave.txt"));
-            #jFileChooser.showSaveDialog(parent);
+            if file.lower().endswith('.csv') == False:
+                pos = file.rfind('.')
+                if pos > 0 and pos < (len(file) - 1):
+                    file = file[:pos]
 
-            with open(fullpath, 'w+') as f:
-                f.write('Method,Host,Path,Type,Note\n')
-                for key in self._topHitTable.keySet():
-                    line = self._topHitTable.get(key)
-                    f.write("{},{},{},{},TopHit={}\n".format(line._method,line._host,line._path,line._piitype,line._hit))
+                file = ''.join([file,'.csv'])
 
-                #self._lock.acquire()
-                
-                for item in self._log:
-                    f.write("{},{},{},{},Matched={}\n".format(item._method,item._host,item._path,item._piitype,item._matched))
 
-                #self._lock.release()
+            fullpath = ''.join([dir,file])
+            outstream = OutputStreamWriter(FileOutputStream(fullpath), 'UTF-8')
 
-            JOptionPane.showMessageDialog(self._splitpane, fullpath)
+            outstream.write(('Method,Host,Path,Type,Note\n'))
+            for key in self._topHitTable.keySet():
+                line = self._topHitTable.get(key)
+                outstream.write(unicode("{},{},{},{},Hit={}\n".format(line._method,line._host,line._path,line._piitype,line._hit), 'utf-8'))
+
+            #self._lock.acquire()
+            
+            for item in self._log:
+                outstream.write(unicode("{},{},{},{},Matched={}\n".format(item._method,item._host,item._path,item._piitype,item._matched),'utf-8'))
+
+            #self._lock.release()
+            outstream.close()
+
+            JOptionPane.showMessageDialog(self._splitpane, 'Log saved : {}'.format(fullpath))
 
         except Exception as e:
             self.__stdout.println(e)
@@ -846,10 +855,10 @@ class StartSaveFileRunnable(Runnable):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        self.__stdout.println("From StartSaveFileRunnable")
+        #self.__stdout.println("From StartSaveFileRunnable")
 
     def run(self):
-        self.__stdout.println("From run StartSaveFileRunnable")
+        #self.__stdout.println("From run StartSaveFileRunnable")
         self._extender.SaveFile()
         return
 #
@@ -883,7 +892,7 @@ class StartSaveFile(ActionListener):
         #self.__stdout.println("StartSaveFile")
 
     def actionPerformed(self, event):
-        self.__stdout.println("actionPerformed")
+        #self.__stdout.println("actionPerformed")
         self._extender.StartSaveFile()
         return
 #
@@ -900,7 +909,7 @@ class StartSendLog(ActionListener):
         #self.__stdout.println("StartSendLog")
 
     def actionPerformed(self, event):
-        self.__stdout.println("actionPerformed")
+        #self.__stdout.println("actionPerformed")
         self._extender.StartSendLog()
         return
 #
