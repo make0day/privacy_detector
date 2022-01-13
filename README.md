@@ -89,3 +89,10 @@ Privacy Detector was born in 2022 by Koo Brothers, for finding privacy informati
 
 * Jan / 10 / 2022: Creation of the extension and initial release.
 
+**1.0.1**
+
+* Jan / 13 / 2022: Privacy Detector is integrated with Burp Spider Now!
+
+Please refer to the next page to see how to set it up : 
+[How to configure Burp Scanner Spider feature](https://github.com/make0day/privacy_detector/wiki/How-to-configure-Burp-Scanner---Spider-feature)
+
