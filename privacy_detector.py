@@ -536,8 +536,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         try:
             if messageInfo != None:
 
-                #From Proxy
-                if toolFlag == 4:
+                #From TOOL_PROXY=4 or From TOOL_SCANNER=16 or TOOL_SPIDER
+                if toolFlag == 4 or toolFlag == 16 or toolFlag == 8:
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
@@ -564,6 +564,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                                 self.__stdout.println("[-] getBodyOffset == 0")
 
                             self.PIIProcessor(toolFlag, responseBody, messageInfo)
+
+
 
         except Exception as e:
             self.__stdout.println(e)
