@@ -39,7 +39,7 @@
       {
          "use": true,
          "type": "RoadAddress",
-         "expression": "(?P<dual5651>[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}([가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}|[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}[\\d]{3,6}-[\\d]{0,3}\\s{0,2})+[가-힣]{1,10}[구군시도읍리면동가길리통]{1}\\s{0,2}[\\d]{3,6}-[\\d]{0,3}\\s{0,2})"
+         "expression": "(?P<dual5651>[가-힣]{1,10}[구군시도읍리면동가길리통][[:space:]]{0,2}([가-힣]{1,10}[구군시도읍리면동가길리통][[:space:]]{0,2}|[가-힣]{1,10}[구군시도읍리면동가길리통][[:space:]]{0,2}[1-9]?[0-9]{2,5}-[0-9]{0,3}[[:space:]]{0,2})[가-힣]{1,10}[구군시도읍리면동가길리통]{1}[[:space:]]{0,2}[1-9]?[0-9]{2,5}-[0-9]{0,3}[[:space:]]{0,2})"
       },
       {
          "use": false,
@@ -47,14 +47,14 @@
          "expression": "(?P<dual5651>[김이박최정강조윤장임한오서신권황안송전홍손문백곽구진엄방공헌함염]{1}[가-힣]{2})"
       },
       {
-         "use": false,
-         "type": "CreditCardtNumber",
-         "expression": "\"(?P<dual5651>(([3-6]|9)\\d{3}-?\\d{4}-?\\d{4}-?(\\d{4}|\\d{3})|37\\d{2}-?\\d{6}-?\\d{5}))\""
+         "use": true,
+         "type": "CreditCardNumber",
+         "expression": "\"(?P<dual5651>[34569][0-9]{3}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4})\""
       },
       {
-         "use": true,
-         "type": "CreditCardNumber2",
-         "expression": "\"(?P<dual5651>[34569][0-9]{3}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4})\""
+         "use": false,
+         "type": "CreditCardtNumber2",
+         "expression": "\"(?P<dual5651>(([3-6]|9)\\d{3}-?\\d{4}-?\\d{4}-?(\\d{4}|\\d{3})|37\\d{2}-?\\d{6}-?\\d{5}))\""
       },
       {
          "use": false,
@@ -74,7 +74,7 @@
       {
          "use": true,
          "type": "DriverLicenseNumber",
-         "expression": "\"(?P<dual5651>[1-2][0-9][-~.[:space:]]\\d{2}[-~.[:space:]]\\d{6}[-~.[:space:]]\\d{2})\""
+         "expression": "\"(?P<dual5651>[1-2][0-9]-\\d{2}-\\d{6}-\\d{2})\""
       },
       {
          "use": false,
@@ -144,22 +144,22 @@
       {
          "use": false,
          "type": "AuthorizationBasic",
-         "expression": "\"(?P<dual5651>Basic\\s[a-zA-Z0-9+\\/]+\\=*)\""
+         "expression": "\"(?P<dual5651>Basic[[:space:]][a-zA-Z0-9+\\/]+\\=*)\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer1",
-         "expression": "\"(?P<dual5651>Bearer\\s[\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})\""
+         "expression": "\"(?P<dual5651>Bearer[[:space:]][\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})\""
       },
       {
          "use": false,
          "type": "AuthorizationBearer2",
-         "expression": "\"(?P<dual5651>Bearer\\s[A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?)\""
+         "expression": "\"(?P<dual5651>Bearer[[:space:]][A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?)\""
       },
       {
          "use": false,
          "type": "AuthorizationAPI",
-         "expression": "\"(?P<dual5651>api[key|\\s*]+[a-zA-Z0-9_\\-]+)\""
+         "expression": "\"(?P<dual5651>api[key|[[:space:]]*]+[a-zA-Z0-9_\\-]+)\""
       },
       {
          "use": false,

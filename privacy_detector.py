@@ -301,7 +301,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
            
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
-                    expression = normalize('NFC', unicode(pattern['expression'], 'utf-8')).encode('utf-8')
+                    expression = normalize('NFC', pattern['expression'])
                     self.__regexs[(re.compile(expression))] = pattern['type']
                     #self.__stdout.println("[+] Loaded policy : {}".format(pattern))
                     #self.__stdout.println(expression)
@@ -324,7 +324,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             patterFilePath = ''.join([os.path.abspath(os.getcwd()), '/patterns.json'])
             if os.path.exists(patterFilePath):
                 #f = open(patterFilePath, "r")
-                self.__stdout.println('[+] Load pattern file in local path = {}'.format(os.path.abspath(os.getcwd())))
+                self.__stdout.println('[+] Load pattern file in local path = {}/patterns.json'.format(os.path.abspath(os.getcwd())))
                 keys = self._helpers.bytesToString(Files.readAllBytes(Paths.get(patterFilePath)))
                 keys = unicode(keys, 'utf-8').decode('utf-8')
             else:
@@ -334,7 +334,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     downloadedPattern = self._helpers.bytesToString(urlStream.readAllBytes())
                     downloadedPattern = normalize('NFC', downloadedPattern)
                     downloadedPattern = unicode(downloadedPattern, 'utf-8').decode('utf-8')
-                    self.__stdout.println(downloadedPattern)
+                    #self.__stdout.println(downloadedPattern)
                     outStream = OutputStreamWriter(FileOutputStream(patterFilePath), 'UTF-8')
                     outStream.write(unicode(downloadedPattern))
 
@@ -377,7 +377,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             IsPIIContaind = False
-            responseBody = normalize('NFC', responseBody)
+            responseBody = normalize('NFC', responseBody).decode('utf-8')
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
@@ -385,7 +385,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
                         if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
-                            matched = unicode(matchobj.group('dual5651').decode('utf-8', 'ignore'))
+                            matched = matchobj.group('dual5651')
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
                             if self._updateTopList == 2:
@@ -401,7 +401,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
                             if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
-                                matched = unicode(matchobj.group('dual5651').decode('utf-8','ignore'))
+                                matched = matchobj.group('dual5651')
                                 row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                                 #Todo check case
                                 if self._updateTopList == 2:
@@ -452,7 +452,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
-                            responseBody = self._helpers.bytesToString(httpProxyItem.getResponse())
+                            responseBody = self._helpers.bytesToString(httpProxyItem.getResponse()).decode('utf-8')
                             #self.__stdout.println(responseBody)
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
@@ -468,7 +468,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             #Possible?
                             self.__stdout.println("[-] Scan type != none of 1-3")
 
-            self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
+            #self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
 
         except Exception as e:
             self.__stdout.println(e)
@@ -563,7 +563,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
-                            responseBody = self._helpers.bytesToString(messageInfo.getResponse())
+                            responseBody = self._helpers.bytesToString(messageInfo.getResponse()) #.decode('utf-8')
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
