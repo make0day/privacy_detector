@@ -20,11 +20,11 @@ To install Privacy Detector, you have to:
 1. Live PII Detection : Privacy Detector will parse all http history generated from that moment and it will find any PII.
 2. Parse Full HTTP history : The plugin will parse full requests history.
 3. Top Hit URL Dashboard : Dashboard to see which URLs are frequently contain PII.
-5. Others : 
+4. Others : 
 - 1) Send log to SIEM server :  The plugin will send send logs to the server with JSON request.
 - 2) Send log as a .csv file : The PII detection results can be exported in .CSV format.
 - 3) Clear history : The function to clear logs.
-6. Configuration:
+5. Configuration:
 - 1) Top list refresh : Turn on and off refresh Top hit list (Default : ON)
 - 2) Search : Whether to find all cases that exist within a web page or just one case. (Default : Find all)
 - 3) Scan : Quick Scan (JSON only) / Deep Scan (JSON/XML/HTML/TEXT) / Full Scan (Except Images)
