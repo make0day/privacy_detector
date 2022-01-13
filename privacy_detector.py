@@ -272,19 +272,29 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def StartClearHistory(self):
-        dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?","Privacy Detector", JOptionPane.YES_NO_OPTION)
-        if dialog == JOptionPane.YES_OPTION:
-            self.__stdout.println("StartClearHistory")
-
+        #dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?","Privacy Detector", JOptionPane.YES_NO_OPTION)
+        #if dialog == JOptionPane.YES_OPTION:
+        #self.__stdout.println("StartClearHistory")
+        try:
             self._lock.acquire()
             self._log.clear()
             self.fireTableDataChanged()
             self._lock.release()
 
+            self._HitTablelock.acquire()
+            self._topHitTable.clear()
+            self._topHitMap.getModel().removeAllElements()
+            self._HitTablelock.release()
+
+            self._topHitTable.validate()
+            self._topHitTable.repaint()
+
             self._responseViewer.setMessage('', False)
             self._currentlyDisplayedItem = ''
             self._logTable.validate()
             self._logTable.repaint()
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 
