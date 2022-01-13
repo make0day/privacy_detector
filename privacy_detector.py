@@ -7,11 +7,11 @@
 #                                                                                       #
 #                        Github : https://github.com/make0day/privacy_detector          #
 #                                                                                       #
-#                        Written by Samuel Koo ( 0day@kakao.com )                       #
+#                            Written by Samuel Koo ( 0day@kakao.com )                   #
 #                                                                                       #
-#                                       and                                             #
+#                                                and                                    #
 #                                                                                       #
-#                                 Daniel Koo ( reby7146@me.com )                        #
+#                                       Daniel Koo ( reby7146@me.com )                  #
 #                                                                                       #
 #########################################################################################
 import sys
@@ -73,19 +73,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
         self._scanningType = 1
-        self.__stdout.println("[+] Current Scanning Mime Type : {}".format(self._scanningType))
+        self.__stdout.println("[+] Current Scanning Mime Type  option: {}".format(self._scanningType))
 
         # 1 = Find one item from the page, 1 > = Find all items
         self._scanningDepth = 2
-        self.__stdout.println("[+] Current Scanning Depth : {}".format(self._scanningDepth))
+        self.__stdout.println("[+] Current Scanning Depth option : {}".format(self._scanningDepth))
 
         # 1 = Do not update top list, 2  = Update top list
         self._updateTopList = 2
-        self.__stdout.println("[+] Update top Hit List : {}".format(self._updateTopList))
+        self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
 
         # 1 = Do not send log to the siem server, 2 = Send log to the siem server asynchronously
         self.__autoSendLogToSiem = 1
-        self.__stdout.println("[+] Auto send log to the server : {}".format(self.__autoSendLogToSiem))
+        self.__stdout.println("[+] Auto send log to the Server option : {}".format(self.__autoSendLogToSiem))
 
         patternFile = self.LoadRulesetFile()
         self.PrecompilePIIRuleSets(patternFile)
@@ -179,7 +179,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnList.add(btnAbout)
         btnAbout.addActionListener(AboutActionListener(self))
 
-        #btnList.add(titleLabel, BorderLayout.NORTH)
         tabPaneController.add(btnList,BorderLayout.CENTER)
 
         PaneCenter = JPanel(BorderLayout())
@@ -228,7 +227,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         
         # register ourselves as an HTTP listener
         callbacks.registerHttpListener(self)
-
         return
 
     #
@@ -296,17 +294,15 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def PrecompilePIIRuleSets(self, patternFile):
         try:
             #precompile regex patterns for better performance
-            self.__stdout.println('[+] Precompile Rulesets')
+            self.__stdout.println('[+] Precompile Rulesets...')
             self.__regexs = dict()
            
             for pattern in patternFile['patterns']:
                 if pattern['use'] == True:
                     expression = normalize('NFC', pattern['expression'])
                     self.__regexs[(re.compile(expression))] = pattern['type']
-                    #self.__stdout.println("[+] Loaded policy : {}".format(pattern))
-                    #self.__stdout.println(expression)
-                #else:
-                    #self.__stdout.println("[-] Not use policy : {}".format(pattern))
+                    self.__stdout.println(pattern['description'])
+            self.__stdout.println('[+] Precompile done')
 
         except Exception as e:
             self.__stdout.println(e)
@@ -348,6 +344,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 else:
                     #Possible?
                     self.__stdout.println('[-] File download error happend')
+                    
+            self.__stdout.println('[+] Pattern file loaded')
 
             patternFile = json.loads(keys)
 
@@ -426,9 +424,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         try:
             httpProxyHistory = self._callbacks.getProxyHistory()
 
-            #logEntry = self._log.get(0)
-            #self.__stdout.println(logEntry)
-
             TotalProxyHistory = len(httpProxyHistory)
             Foundcnt = 0
 
@@ -445,30 +440,24 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         if mimeType == '':
                             mimeType = httpProxyItemResponse.getInferredMimeType().lower()
 
-                        #self.__stdout.println("mimeType = {}".format(mimeType))
-
                         if  (self._scanningType == 1 and mimeType == 'json') or \
                             (self._scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
                             (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(httpProxyItem.getResponse()) #.decode('utf-8')
-                            #self.__stdout.println(responseBody)
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
-                                #responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
                             else:
                                 self.__stdout.println("[-] getBodyOffset == 0")
 
                             IsPIIContaind = self.PIIProcessor(4, responseBody, httpProxyItem)
                             if IsPIIContaind == True:
                                 Foundcnt = Foundcnt + 1
-                        else:
+                        #else:
                             #Possible?
-                            self.__stdout.println("[-] Scan type != none of 1-3")
-
-            #self.__stdout.println("[+] Found {} PIIs from total {} entries".format(Foundcnt, TotalProxyHistory))
+                            #self.__stdout.println("[-] Scan type != none of 1-3")
 
         except Exception as e:
             self.__stdout.println(e)
@@ -482,7 +471,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def SaveFile(self):
         try:
 
-            #self.__stdout.println("SaveFile func")
             ancestor = SwingUtilities.getWindowAncestor(self._splitpane)
             saveDialog = FileDialog(ancestor, "Privacy Detector - Save Log", FileDialog.SAVE)
             saveDialog.setDirectory(os.path.abspath(os.getcwd()))
@@ -502,16 +490,18 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             outstream = OutputStreamWriter(FileOutputStream(fullpath), 'UTF-8')
 
             outstream.write(('Method,Host,Path,Type,Note\n'))
+            #self._HitTablelock.acquire()
             for key in self._topHitTable.keySet():
                 line = self._topHitTable.get(key)
                 outstream.write(unicode("{},{},{},{},Hit={}\n".format(line._method,line._host,line._path,line._piitype,line._hit), 'utf-8'))
+            #self._HitTablelock.release()
 
             #self._lock.acquire()
-            
             for item in self._log:
                 outstream.write(unicode("{},{},{},{},Matched={}\n".format(item._method,item._host,item._path,item._piitype,item._matched),'utf-8'))
 
             #self._lock.release()
+
             outstream.close()
 
             JOptionPane.showMessageDialog(self._splitpane, 'Log saved : {}'.format(fullpath))
@@ -556,8 +546,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         if mimeType == '':
                             mimeType = httpProxyItemResponse.getInferredMimeType().lower()
 
-                        #self.__stdout.println("mimeType = {}".format(mimeType))
-
                         if  (self._scanningType == 1 and mimeType == 'json') or \
                             (self._scanningType == 2 and ((mimeType in ["json","xml","text","html"]) or (mimeType == ''))) or \
                             (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
@@ -567,7 +555,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
-                                #responseBody = unicode(responseBody[httpProxyItemResponse.getBodyOffset():], 'utf-8').decode('utf-8')
                             else:
                                 #Possible?
                                 self.__stdout.println("[-] getBodyOffset == 0")
@@ -677,6 +664,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def AddHitEntry(self, host, path, piitype, method, linkedrow):
+
         key = "{}#{}#{}".format(method,host,path)
 
         try:
@@ -751,7 +739,6 @@ class Table(JTable):
     
         # show the log entry for the selected row
         logEntry = self._extender._log.get(row)
-        #self._extender._requestViewer.setMessage(logEntry._requestResponse.getRequest(), True)
 
         try:
             httpProxyItemResponse = self._callbacks.getHelpers().analyzeResponse(logEntry._requestResponse.getResponse())
@@ -840,10 +827,8 @@ class StartParseFullHTTPRunnable(Runnable):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("From StartParseFullHTTPRunnable")
 
     def run(self):
-        #self.__stdout.println("From run StartParseFullHTTPRunnable")
         self._extender._logTable.setAutoCreateRowSorter(False)
         self._extender.ParseFullHTTP()
         self._extender._logTable.setAutoCreateRowSorter(True)
@@ -860,10 +845,8 @@ class StartSaveFileRunnable(Runnable):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("From StartSaveFileRunnable")
 
     def run(self):
-        #self.__stdout.println("From run StartSaveFileRunnable")
         self._extender.SaveFile()
         return
 #
@@ -894,10 +877,8 @@ class StartSaveFile(ActionListener):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("StartSaveFile")
 
     def actionPerformed(self, event):
-        #self.__stdout.println("actionPerformed")
         self._extender.StartSaveFile()
         return
 #
@@ -911,10 +892,8 @@ class StartSendLog(ActionListener):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("StartSendLog")
 
     def actionPerformed(self, event):
-        #self.__stdout.println("actionPerformed")
         self._extender.StartSendLog()
         return
 #
@@ -928,10 +907,8 @@ class StartClearHistory(ActionListener):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("StartClearHistory")
 
     def actionPerformed(self, event):
-        #self.__stdout.println("actionPerformed")
         self._extender.StartClearHistory()
         return
 #
@@ -945,14 +922,11 @@ class StartParseFullHTTP(ActionListener):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        #self.__stdout.println("StartParseFullHTTP")
 
     def actionPerformed(self, event):
-        #self.__stdout.println("actionPerformed")
         dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?","Privacy Detector", JOptionPane.YES_NO_OPTION)
         if dialog == JOptionPane.YES_OPTION:
             if len(self._callbacks.getProxyHistory()) > 0:
-                #self.__stdout.println("StartParseFullHTTP")
                 self._extender.StartParseFullHTTP()
         return
 
@@ -966,10 +940,9 @@ class chkFindAllClicked(ItemListener):
         super(chkFindAllClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
-        #self.__stdout.println("itemStateChanged = {}".format(ItemEvent.getStateChange()==1))
         if ItemEvent.getStateChange()==1:
             if self._extender._scanningDepth == 2:
                 self._extender._scanningDepth = 1
@@ -977,7 +950,6 @@ class chkFindAllClicked(ItemListener):
                 self._extender._scanningDepth = 2
         else:
             self._extender._scanningDepth = 1
-        self.__stdout.println("[+] Find All Channged = {}".format(self._extender._scanningDepth))
         return
 #
 # class to scan option
@@ -989,12 +961,12 @@ class scanBoxClicked(ItemListener):
         super(scanBoxClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+       # self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         if ItemEvent.getStateChange()==1:
             self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
-            self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
+            #self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
         return
 
 #
@@ -1007,7 +979,7 @@ class chkTophitClicked(ItemListener):
         super(chkTophitClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         if ItemEvent.getStateChange()==1:
@@ -1019,7 +991,7 @@ class chkTophitClicked(ItemListener):
                 #self._extender._topHitLogger.remove(self._extender._topHitMap)
         else:
             self._extender._updateTopList = 1
-        self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
+        #self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
         return
 #
 # class to handle top list event
@@ -1031,7 +1003,7 @@ class tableEventHandler(MouseListener):
         super(tableEventHandler, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     #
     # 
@@ -1058,7 +1030,6 @@ class tableEventHandler(MouseListener):
 
     def mouseEntered(self, MoustEvent):
         return
-            #self.__stdout.println("[+] mouseEntered = ")
 
     #
     # 
@@ -1066,7 +1037,6 @@ class tableEventHandler(MouseListener):
 
     def mouseExited(self, MoustEvent):
         return
-            #self.__stdout.println("[+] mouseExited = ")
 
     #
     # 
@@ -1074,7 +1044,6 @@ class tableEventHandler(MouseListener):
 
     def mousePressed(self, MoustEvent):
         return
-            #self.__stdout.println("[+] mousePressed = ")
 
     #
     # 
@@ -1082,7 +1051,6 @@ class tableEventHandler(MouseListener):
 
     def mouseReleased(self, MoustEvent):
         return
-            #self.__stdout.println("[+] mouseReleased = ")
 
 #
 # class to run thread Full http history
