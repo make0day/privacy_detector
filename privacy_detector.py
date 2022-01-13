@@ -344,7 +344,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 else:
                     #Possible?
                     self.__stdout.println('[-] File download error happend')
-                    
+
             self.__stdout.println('[+] Pattern file loaded')
 
             patternFile = json.loads(keys)
@@ -489,16 +489,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             fullpath = ''.join([dir,file])
             outstream = OutputStreamWriter(FileOutputStream(fullpath), 'UTF-8')
 
-            outstream.write(('Method,Host,Path,Type,Note\n'))
+            outstream.write(('Method,Host,Path,Type,Time,Note\n'))
             #self._HitTablelock.acquire()
             for key in self._topHitTable.keySet():
                 line = self._topHitTable.get(key)
-                outstream.write(unicode("{},{},{},{},Hit={}\n".format(line._method,line._host,line._path,line._piitype,line._hit), 'utf-8'))
+                outstream.write(unicode("{},{},{},{},{},Hit={}\n".format(line._method,line._host,line._path,line._piitype,line._time,line._hit), 'utf-8'))
             #self._HitTablelock.release()
 
             #self._lock.acquire()
-            for item in self._log:
-                outstream.write(unicode("{},{},{},{},Matched={}\n".format(item._method,item._host,item._path,item._piitype,item._matched),'utf-8'))
+            for line in self._log:
+                outstream.write(unicode("{},{},{},{},{},Matched={}\n".format(line._method,line._host,line._path,line._piitype,line._time,line._matched),'utf-8'))
 
             #self._lock.release()
 
@@ -815,7 +815,7 @@ class HitEntry:
         self._method = method
         self._hit = 1
         self._linkedrow = linkedrow
-        #self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
+        self._time = datetime.now().strftime("%H:%M:%S %m/%d/%Y")
 
 #
 # class to run thread Full http history
