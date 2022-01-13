@@ -33,41 +33,41 @@ To install Privacy Detector, you have to:
 
 Category | Level | Type | Description
 ---- | ---- | ---- | ----
-PII | medium | MobileNumber | Mobile cell phone number information
-PII | medium | PhoneNumber | Telephone number information
-PII | medium | EmailAddress | Email address information
-PII | medium | ResidentRegistrationNumber | Resident Registration Number(RRN) information
-PII | high | ResidentRegistrationNumber | Corporate registration number information
-PII | low | BusinessRegistrationNumber | Resident Registration Number(RRN) information
-PII | high | NationalInsuranceNumber | National insurance number information
-PII | high | PCCCNumber | Personal customs clearance code information
-PII | high | ForeinerRegistrationNumber | Foreiner registration number information
-PII | high | PassportNumber | Passport number information
-PII | high | CreditCardNumber | Credit card number information
-PII | high | MasterCardNumber | Credit card number information
-PII | high | VisaCardNumber | Credit card number information
-PII | high | AmexCardNumber | Credit card number information
-PII | high | DriverLicenseNumber | Driver license number information
-PII | high | BankAccountNumber | Bank account number information
-PII | medium | RoadAddress | Address information
-PII | medium | KoreanName | Profile name information
-PII | low | Ipv4Address | IP v4 address information
-PII | low | URLAddress | URL address information
-PII | medium | URLAddress | MAC address information
-CREDENTIAL | info | AccessKeyType | Multi type potential access key information
-CREDENTIAL | critical | AWSSessionToken | AWS session token information
-CREDENTIAL | high | AWSAccessKey | AWS access key information
-CREDENTIAL | high | TencentSecretId | Tencent secret ID information
-CREDENTIAL | high | GoogleAPIToken | Google API token information
-CREDENTIAL | critical | AWSSecretKey | AWS secret key information
-CREDENTIAL | critical | PrivateSecureKey | Private secure key information
-CREDENTIAL | high | AuthorizationBasic | Authorization basic information
-CREDENTIAL | high | AuthorizationBearer1 | Authorization bearer information
-CREDENTIAL | high | AuthorizationBearer2 | Authorization bearer information
-CREDENTIAL | high | AuthorizationAPI | Authorization API information
-CREDENTIAL | high | GoogleOAuthToken | Google OAuth token information
-CREDENTIAL | high | GoogleOAuthKey | Google OAuth key information
-CREDENTIAL | high | FacebookAuthToken | Facebook Auth token information
+PII | Medium | MobileNumber | Mobile cell phone number information
+PII | Medium | PhoneNumber | Telephone number information
+PII | Medium | EmailAddress | Email address information
+PII | Medium | ResidentRegistrationNumber | Resident Registration Number(RRN) information
+PII | High | ResidentRegistrationNumber | Corporate registration number information
+PII | Low | BusinessRegistrationNumber | Resident Registration Number(RRN) information
+PII | High | NationalInsuranceNumber | National insurance number information
+PII | High | PCCCNumber | Personal customs clearance code information
+PII | High | ForeinerRegistrationNumber | Foreiner registration number information
+PII | High | PassportNumber | Passport number information
+PII | High | CreditCardNumber | Credit card number information
+PII | High | MasterCardNumber | Credit card number information
+PII | High | VisaCardNumber | Credit card number information
+PII | High | AmexCardNumber | Credit card number information
+PII | High | DriverLicenseNumber | Driver license number information
+PII | High | BankAccountNumber | Bank account number information
+PII | Medium | RoadAddress | Address information
+PII | Medium | KoreanName | Profile name information
+PII | Low | Ipv4Address | IP v4 address information
+PII | Low | URLAddress | URL address information
+PII | Medium | URLAddress | MAC address information
+CREDENTIAL | Info | AccessKeyType | Multi type potential access key information
+CREDENTIAL | Critical | AWSSessionToken | AWS session token information
+CREDENTIAL | High | AWSAccessKey | AWS access key information
+CREDENTIAL | High | TencentSecretId | Tencent secret ID information
+CREDENTIAL | High | GoogleAPIToken | Google API token information
+CREDENTIAL | Critical | AWSSecretKey | AWS secret key information
+CREDENTIAL | Critical | PrivateSecureKey | Private secure key information
+CREDENTIAL | High | AuthorizationBasic | Authorization basic information
+CREDENTIAL | High | AuthorizationBearer1 | Authorization bearer information
+CREDENTIAL | High | AuthorizationBearer2 | Authorization bearer information
+CREDENTIAL | High | AuthorizationAPI | Authorization API information
+CREDENTIAL | High | GoogleOAuthToken | Google OAuth token information
+CREDENTIAL | High | GoogleOAuthKey | Google OAuth key information
+CREDENTIAL | High | FacebookAuthToken | Facebook Auth token information
 
 ## Credits
 
