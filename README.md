@@ -21,7 +21,12 @@ To install Privacy Detector, you have to:
 2. Parse Full HTTP history : The plugin will parse full requests history.
 3. Top Hit URL Dashboard : Dashboard to see which URLs are frequently contain PII.
 4. Others : 
-- 1) Send log to SIEM server :  The plugin will send send logs to the server with JSON request.
+- 1) Send log to Splunk server :  The plugin will send send logs to Splunk server with JSON request.
+- - Options :
+- - 1. SplunkHost : Your log server host name, ex : splunklogserver
+- - 2. SplunkToken : Splunk server API token, ex : pleasefillyoursplunktoken
+- - 3. SplunkSleep : Logging interval, ex : 5 (Every 5 Mins)
+- - 4. SplunkAutoSend : Whether use auto send log or not, ex: 1=no, 2=yes
 - 2) Send log as a .csv file : The PII detection results can be exported in .CSV format.
 - 3) Clear history : The function to clear logs.
 5. Configuration:
