@@ -18,6 +18,7 @@ import sys
 import os
 import json
 import re
+import time
 from datetime import datetime
 from threading import Lock
 from unicodedata import normalize
@@ -34,11 +35,15 @@ from javax.swing import JPanel, JOptionPane, JScrollPane, JSplitPane, JTabbedPan
 from javax.swing.table import AbstractTableModel
 from java.lang import Thread, Runnable
 from java.lang import *
-from java.util import ArrayList, List, Map, HashMap, Hashtable, Vector
+from java.util import ArrayList, List, Map, HashMap, Hashtable, Vector, Timer, TimerTask
 from java.util.regex import *
-from java.io import File, PrintWriter, FileWriter, OutputStreamWriter, FileOutputStream, InputStreamReader, FileInputStream
+from java.io import File, PrintWriter, FileWriter, OutputStreamWriter, FileOutputStream, DataOutputStream
+from java.io import InputStreamReader, BufferedReader, FileInputStream
 from java.net import URL
+from jarray import array
+from java.security import SecureRandom
 from java.nio.file import Files, Paths
+from javax.net.ssl import SSLContext, TrustManager, X509TrustManager, HttpsURLConnection
 
 #
 # implement IBurpExtender
@@ -59,6 +64,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         
         # set our extension name
         callbacks.setExtensionName("Privacy Detector")
+
+        # if Proxy is enabled than turn off
+        callbacks.setProxyInterceptionEnabled(False)
 
         #set encoding as utf-8
         reload(sys)
@@ -83,9 +91,32 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._updateTopList = 2
         self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
 
-        # 1 = Do not send log to the siem server, 2 = Send log to the siem server asynchronously
-        self.__autoSendLogToSiem = 1
-        self.__stdout.println("[+] Auto send log to the Server option : {}".format(self.__autoSendLogToSiem))
+        # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
+        self._autoSendLogToSplunk = callbacks.loadExtensionSetting("SplunkAutoSend")
+        self.__stdout.println(self._autoSendLogToSplunk)
+        if self._autoSendLogToSplunk == None:
+            callbacks.saveExtensionSetting("SplunkAutoSend", "2")
+            self._autoSendLogToSplunk = 2
+        # Every 5 Mins
+        self._splunkSleep = callbacks.loadExtensionSetting("SplunkSleep")
+        if self._splunkSleep == None:
+            callbacks.saveExtensionSetting("SplunkSleep", "5")
+            self._splunkSleep = 5
+
+        # Splunk host
+        self._splunkHost = callbacks.loadExtensionSetting("SplunkHost")
+        if self._splunkHost == None:
+            callbacks.saveExtensionSetting("SplunkHost", "splunklogserver.com")
+            self._splunkHost = ''
+
+        # Your splunk auth token
+        self._splunkAuthKey = callbacks.loadExtensionSetting("SplunkToken")
+        if self._splunkAuthKey == None:
+            callbacks.saveExtensionSetting("SplunkToken", "pleasefillyoursplunktoken")
+            callbacks.loadExtensionSetting()
+            self._splunkAuthKey = ''
+
+        self.__stdout.println("[+] send log to the Server options : {} {} {}".format(self._autoSendLogToSplunk, self._splunkSleep, self._splunkHost, self._splunkAuthKey))
 
         patternFile = self.LoadRulesetFile()
         self.PrecompilePIIRuleSets(patternFile)
@@ -164,12 +195,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         btnClearHistory.setSize(300, 300)
         btnClearHistory.addActionListener(StartClearHistory(self))
 
-        btnSaveFile = JButton("Save to file")
+        btnSaveFile = JButton("Save as .csv file")
         btnList.add(btnSaveFile,BorderLayout.SOUTH)
         btnSaveFile.setSize(300, 300)
         btnSaveFile.addActionListener(StartSaveFile(self))
 
-        btnSendLog = JButton("Config Server")
+        btnSendLog = JButton("Send Splunk event")
         btnList.add(btnSendLog)
         btnSendLog.setSize(300, 300)
         btnSendLog.addActionListener(StartSendLog(self))
@@ -272,9 +303,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def StartClearHistory(self):
-        #dialog = JOptionPane.showConfirmDialog(self._splitpane, "Are you sure want to perform Clear history?","Privacy Detector", JOptionPane.YES_NO_OPTION)
-        #if dialog == JOptionPane.YES_OPTION:
-        #self.__stdout.println("StartClearHistory")
         try:
             self._lock.acquire()
             self._log.clear()
@@ -529,9 +557,104 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     # implement 
     #
 
+
+    def jsonLogGeneration(self):
+
+        jsonResult = {'event':[]}
+
+        try:
+
+            for key in self._topHitTable.keySet():
+                line = self._topHitTable.get(key)
+
+                data = {'method' : line._method, \
+                      'url' : ''.join([line._host,line._path]),\
+                      'type' : line._piitype}
+
+                jsonResult['event'].append(data)
+
+
+            for line in self._log:
+                data = {'method' : line._method, \
+                        'url' : ''.join([line._host,line._path]), \
+                        'type' : line._piitype}
+
+                jsonResult['event'].append(data)
+
+        except Exception as e:
+            self.__stdout.println(e)
+
+        return jsonResult
+
+    #
+    # implement 
+    #
+
     def SendLog(self):
-        self.__stdout.println("SendLog func")
-        JOptionPane.showMessageDialog(self._splitpane, 'Not implemented yet')
+
+        try:
+
+            class TrustDualX509Manager(X509TrustManager):
+                def __init__(self, extender):
+                    super(TrustDualX509Manager, self).__init__()
+                    self._extender = extender
+                    self._callbacks = self._extender._callbacks
+                    return None
+
+                def checkClientTrusted(self, chain, auth):
+                    pass
+
+                def checkServerTrusted(self, chain, auth):
+                    pass
+
+                def getAcceptedIssuers(self):
+                    return None
+
+            data = {'sourcetype' : 'burp_redteam', \
+                      'time' : str(int(round(time.time() * 1000))),
+                      'event' : self.jsonLogGeneration()}
+
+            jsonParam = json.dumps(data, ensure_ascii=False, sort_keys=False)
+
+            splunkUrl = URL(''.join(["https://",self._splunkHost,"/services/collector/event"]))
+            conn = splunkUrl.openConnection()
+
+            conn.setDoOutput(True)
+            conn.setUseCaches(False)
+            conn.setRequestMethod("POST")
+            conn.setRequestProperty("User-Agent", "Privacy Detector")
+            conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8")
+            conn.setRequestProperty("Authorization", ''.join(["Splunk ",self._splunkAuthKey]))
+
+            ctx = SSLContext.getInstance("SSL")
+            ctx.init(None, array([TrustDualX509Manager(self)], TrustManager), SecureRandom())
+            HttpsURLConnection.setDefaultSSLSocketFactory(ctx.getSocketFactory())
+            conn.connect()
+            conn.setInstanceFollowRedirects(True)
+
+            outStream = DataOutputStream(conn.getOutputStream())
+            #self.__stdout.println("Write Data = {}".format(param))
+            outStream.writeBytes(unicode(jsonParam, 'utf-8'))
+
+            if conn.getResponseCode() == HttpsURLConnection.HTTP_OK:
+                inputStream = conn.getInputStream()
+            else:
+                inputStream = conn.getErrorStream()
+
+            reader = BufferedReader(InputStreamReader(inputStream))
+            if reader != None:
+                serverResponse = self._helpers.bytesToString(reader.readLine())
+            if serverResponse != None:
+                self.__stdout.println("[+] Send log to Splunk server successfully")
+
+            reader.close()
+            conn.disconnect()
+
+            outStream.flush()
+            outStream.close()
+
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
     #
@@ -862,7 +985,7 @@ class StartSaveFileRunnable(Runnable):
     def __init__(self, extender):
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def run(self):
         self._extender.SaveFile()
@@ -877,11 +1000,18 @@ class StartSendLogRunnable(Runnable):
         self._extender = extender
         self._callbacks = self._extender._callbacks
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
-        self.__stdout.println("From StartSendLogRunnable")
 
     def run(self):
-        self.__stdout.println("From run StartSendLogRunnable")
-        self._extender.SendLog()
+        if self._extender._splunkHost == '' or self._extender._splunkAuthKey == '':
+            self.__stdout.println('[-] SplunkHost or Splunk auth key is null :(')
+        else: 
+            if self._extender._autoSendLogToSplunk == 2:
+                while self._extender._autoSendLogToSplunk == 2:
+                    self._extender.SendLog()
+                    #self.__stdout.println(''.join((["[+] Send log to Splunk server every ", str(self._extender._splunkSleep)," Minutes"])))
+                    Thread.sleep(1000 * 60 * self._extender._splunkSleep)
+            else:
+                self._extender.SendLog()
         return
 
 #
@@ -894,7 +1024,7 @@ class StartSaveFile(ActionListener):
         super(StartSaveFile, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def actionPerformed(self, event):
         self._extender.StartSaveFile()
@@ -909,7 +1039,7 @@ class StartSendLog(ActionListener):
         super(StartSendLog, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def actionPerformed(self, event):
         self._extender.StartSendLog()
