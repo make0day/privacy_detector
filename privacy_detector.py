@@ -292,6 +292,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     # Precompile Regex rulesets
     #
     def PrecompilePIIRuleSets(self, patternFile):
+
         try:
             #precompile regex patterns for better performance
             self.__stdout.println('[+] Precompile Rulesets...')
@@ -313,6 +314,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def LoadRulesetFile(self):
+
         patternFile = ''
         keys = ''
         try:
@@ -360,22 +362,22 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
     def PIIProcessor(self, toolFlag, responseBody, messageInfo):
         #PII Processor
+        IsPIIContaind = False
+
         try:
             Url = messageInfo.getUrl()
             Method = self._helpers.analyzeRequest(messageInfo).getMethod()
             upart = URL(Url.toString())
             Path = upart.path
-            #Host = upart.host
-            #Port = upart.port
             httpService = messageInfo.getHttpService()
             Protocol = httpService.getProtocol()
             #Host = httpService.getHost()
             #Port = httpService.getPort()
-            #Todo : How to get scheme from URL object?
 
+            #Todo : How to get scheme from URL object?
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
-            IsPIIContaind = False
             responseBody = normalize('NFC', responseBody).decode('utf-8')
+            #self.__stdout.println(responseBody)
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
@@ -400,6 +402,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                         for matchobj in matchObj_iter:
                             if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
                                 matched = matchobj.group('dual5651')
+                                #self.__stdout.println(matched)
                                 row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                                 #Todo check case
                                 if self._updateTopList == 2:
@@ -469,6 +472,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def SaveFile(self):
+
         try:
 
             ancestor = SwingUtilities.getWindowAncestor(self._splitpane)
@@ -572,6 +576,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
     
     def getRowCount(self):
+
         try:
             return self._log.size()
         except:
@@ -604,6 +609,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def getValueAt(self, rowIndex, columnIndex):
+
         logEntry = self._log.get(rowIndex)
         if columnIndex == 0:
             return str(rowIndex)
