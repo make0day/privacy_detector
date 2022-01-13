@@ -55,19 +55,19 @@ PII | low | Ipv4Address | IP v4 address information
 PII | low | URLAddress | URL address information
 PII | medium | URLAddress | MAC address information
 CREDENTIAL | info | AccessKeyType | Multi type potential access key information
-CREDENTIAL | info | AWSSessionToken | AWS session token information
-CREDENTIAL | info | AWSAccessKey | AWS access key information
-CREDENTIAL | info | TencentSecretId | Tencent secret ID information
-CREDENTIAL | info | GoogleAPIToken | Google API token information
-CREDENTIAL | info | AWSSecretKey | AWS secret key information
-CREDENTIAL | info | PrivateSecureKey | Private secure key information
-CREDENTIAL | info | AuthorizationBasic | Authorization basic information
-CREDENTIAL | info | AuthorizationBearer1 | Authorization bearer information
-CREDENTIAL | info | AuthorizationBearer2 | Authorization bearer information
-CREDENTIAL | info | AuthorizationAPI | Authorization API information
-CREDENTIAL | info | GoogleOAuthToken | Google OAuth token information
-CREDENTIAL | info | GoogleOAuthKey | Google OAuth key information
-CREDENTIAL | info | FacebookAuthToken | Facebook Auth token information
+CREDENTIAL | critical | AWSSessionToken | AWS session token information
+CREDENTIAL | high | AWSAccessKey | AWS access key information
+CREDENTIAL | high | TencentSecretId | Tencent secret ID information
+CREDENTIAL | high | GoogleAPIToken | Google API token information
+CREDENTIAL | critical | AWSSecretKey | AWS secret key information
+CREDENTIAL | critical | PrivateSecureKey | Private secure key information
+CREDENTIAL | high | AuthorizationBasic | Authorization basic information
+CREDENTIAL | high | AuthorizationBearer1 | Authorization bearer information
+CREDENTIAL | high | AuthorizationBearer2 | Authorization bearer information
+CREDENTIAL | high | AuthorizationAPI | Authorization API information
+CREDENTIAL | high | GoogleOAuthToken | Google OAuth token information
+CREDENTIAL | high | GoogleOAuthKey | Google OAuth key information
+CREDENTIAL | high | FacebookAuthToken | Facebook Auth token information
 
 ## Credits
 
