@@ -25,7 +25,7 @@
          "type": "EmailAddress",
          "description": "Email address information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>[a-z0-9_\\.-]{1,10}@[\\da-z\\.-]+\\.[^pjg]{1}[a-z\\.]{2,6})\""
+         "expression": "\"(?P<dual5651>[a-z0-9_\\.-]{1,25}@[\\da-z\\.-]+\\.[^pjg]{1}[a-z\\.]{2,6})\""
       },
       {
          "use": true,
