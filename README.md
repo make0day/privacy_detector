@@ -29,6 +29,46 @@ To install Privacy Detector, you have to:
 - 2) Search : Whether to find all cases that exist within a web page or just one case. (Default : Find all)
 - 3) Scan : Quick Scan (JSON only) / Deep Scan (JSON/XML/HTML/TEXT) / Full Scan (Except Images)
 
+## Supported formats
+
+Category | Level | Type | Description
+---- | ---- | ---- | ----
+PII | medium | MobileNumber | Mobile cell phone number information
+PII | medium | PhoneNumber | Telephone number information
+PII | medium | EmailAddress | Email address information
+PII | medium | ResidentRegistrationNumber | Resident Registration Number(RRN) information
+PII | high | ResidentRegistrationNumber | Corporate registration number information
+PII | low | BusinessRegistrationNumber | Resident Registration Number(RRN) information
+PII | high | NationalInsuranceNumber | National insurance number information
+PII | high | PCCCNumber | Personal customs clearance code information
+PII | high | ForeinerRegistrationNumber | Foreiner registration number information
+PII | high | PassportNumber | Passport number information
+PII | high | CreditCardNumber | Credit card number information
+PII | high | MasterCardNumber | Credit card number information
+PII | high | VisaCardNumber | Credit card number information
+PII | high | AmexCardNumber | Credit card number information
+PII | high | DriverLicenseNumber | Driver license number information
+PII | high | BankAccountNumber | Bank account number information
+PII | medium | RoadAddress | Address information
+PII | medium | KoreanName | Profile name information
+PII | low | Ipv4Address | IP v4 address information
+PII | low | URLAddress | URL address information
+PII | medium | URLAddress | MAC address information
+CREDENTIAL | info | AccessKeyType | Multi type potential access key information
+CREDENTIAL | info | AWSSessionToken | AWS session token information
+CREDENTIAL | info | AWSAccessKey | AWS access key information
+CREDENTIAL | info | TencentSecretId | Tencent secret ID information
+CREDENTIAL | info | GoogleAPIToken | Google API token information
+CREDENTIAL | info | AWSSecretKey | AWS secret key information
+CREDENTIAL | info | PrivateSecureKey | Private secure key information
+CREDENTIAL | info | AuthorizationBasic | Authorization basic information
+CREDENTIAL | info | AuthorizationBearer1 | Authorization bearer information
+CREDENTIAL | info | AuthorizationBearer2 | Authorization bearer information
+CREDENTIAL | info | AuthorizationAPI | Authorization API information
+CREDENTIAL | info | GoogleOAuthToken | Google OAuth token information
+CREDENTIAL | info | GoogleOAuthKey | Google OAuth key information
+CREDENTIAL | info | FacebookAuthToken | Facebook Auth token information
+
 ## Credits
 
 Privacy Detector was born in 2022 by Koo Brothers, for finding privacy information from HTTP responses automatically.
