@@ -452,7 +452,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             (self._scanningType == 3 and mimeType not in ["png","gif","css","jpeg","script","image","video","app"]):
                     
                             #Get the response body
-                            responseBody = self._helpers.bytesToString(httpProxyItem.getResponse()).decode('utf-8')
+                            responseBody = self._helpers.bytesToString(httpProxyItem.getResponse()) #.decode('utf-8')
                             #self.__stdout.println(responseBody)
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
