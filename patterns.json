@@ -37,7 +37,7 @@
       {
          "use": true,
          "type": "BusinessRegistrationNumber",
-         "description": "Corporate registratio number information",
+         "description": "Corporate registration number information",
          "level": "low",
          "expression": "\"(?P<dual5651>(\\d{3})+-+(\\d{2})+-+\\d{5})\""
       },
@@ -163,7 +163,7 @@
       },
       {
          "use": false,
-         "type": "AccessKeyType1",
+         "type": "AccessKeyType",
          "description": "Multi type potential access key information",
          "level": "info",
          "expression": "\"(?P<dual5651>([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}))\""
