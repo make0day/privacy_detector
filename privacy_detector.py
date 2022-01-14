@@ -319,6 +319,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                 self._updateTopList = 2
             self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
             
+            self._callSpiderMan = 2
+            self._spiderDepth = 3
 
 
             # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
@@ -729,6 +731,25 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__stdout.println(e)
 
         return
+
+
+    def amazingSpiderMan(self, host, path):
+
+        url = ''
+
+        if self._spiderDepth == 3:
+            url = ''.join([host, '/'])
+        elif self._spiderDepth == 2:
+            if path.rfind("/") != -1 and path[:path.rfind("/")].rfind("/") != -1:
+                url = ''.join([host,path[:path[:path.rfind("/")].rfind("/")]])
+            else:
+                url = ''.join([host, '/'])
+
+        self.__stdout.println(''.join(['MaryJane : Please help me, Spider man!! ', url]))
+        maryJane = URL(url)
+        self._callbacks.sendToSpider(maryJane)
+
+        return
     
 
     #
@@ -867,6 +888,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                     if row:
                         #Now, Exist (Added new)
                         TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                        if self._callSpiderMan == 2:
+                            self.amazingSpiderMan(host, path)
                     else:
                         #Error not possible?
                         self.__stdout.println("[-] row zero == 0")
