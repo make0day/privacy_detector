@@ -774,7 +774,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                     return
                     #if toolFlag == 8 or toolFlag == 16:
                         #url = self._helpers.analyzeRequest(messageInfo).getUrl()
-                        self.__stdout.println("hello from response flag = {} url = {}".format(toolFlag, url))
+                        #self.__stdout.println("hello from response flag = {} url = {}".format(toolFlag, url))
 
 
         except Exception as e:
