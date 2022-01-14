@@ -23,7 +23,9 @@ from datetime import datetime
 from threading import Lock
 from unicodedata import normalize
 
-from burp import IBurpExtender, ITab, IHttpListener, IMessageEditorController, IMessageEditorController
+from burp import IBurpExtender, ITab, IHttpListener, IScannerListener, IExtensionStateListener, IMessageEditorController, IMessageEditorController
+from burp import IScannerCheck
+from burp import IScanIssue
 
 from java.awt.event import ActionListener, ItemListener, MouseListener
 from java.awt import Component, Color, Font
@@ -49,7 +51,7 @@ from javax.net.ssl import SSLContext, TrustManager, X509TrustManager, HttpsURLCo
 # implement IBurpExtender
 #
 
-class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController, AbstractTableModel):
+class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtensionStateListener, IMessageEditorController, AbstractTableModel):
     
     #
     # implement IBurpExtender
@@ -195,6 +197,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self._tabController = tabPaneController
         self._topHitTable = HashMap()
         self._HitTablelock = Lock()
+        self._stopThread = False
 
         self._topHitMap = JList(Vector(self._topHitTable.keySet()))
         self._topHitMap.setVisible(True)
@@ -221,6 +224,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         
         # register ourselves as an HTTP listener
         callbacks.registerHttpListener(self)
+        callbacks.registerScannerListener(self);
+        callbacks.registerExtensionStateListener(self);
         return
 
     #
@@ -248,7 +253,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     #
 
     def StartSendLog(self):
-        thread = Thread(StartSendLogRunnable(self))
+        self._extender._LogThread = Thread(StartSendLogRunnable(self))
         thread.start()
         return
 
@@ -259,6 +264,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def StartSaveFile(self):
         thread = Thread(StartSaveFileRunnable(self))
         thread.start()
+        return
+
+    def extensionUnloaded(self):
+        self._callbacks.printOutput("Privacy Detector unloaded")
+        self._stopThread = True
         return
 
     #
@@ -691,13 +701,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         # only process requests
         if messageIsRequest:
+            if toolFlag == 8:
+                url = self._helpers.analyzeRequest(messageInfo).getUrl()
+                self.__stdout.println(url)
             return
         
         try:
             if messageInfo != None:
 
                 #From TOOL_PROXY=4 or From TOOL_SCANNER=16 or TOOL_SPIDER
-                if toolFlag == 4 or toolFlag == 16 or toolFlag == 8:
+                if toolFlag == 4 or toolFlag == 16:
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
@@ -726,7 +739,6 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
                             self.PIIProcessor(toolFlag, responseBody, messageInfo)
 
 
-
         except Exception as e:
             self.__stdout.println(e)
 
@@ -747,7 +759,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
 
         self.__stdout.println(''.join(['MaryJane : Please help me, Spider man!! ', url]))
         maryJane = URL(url)
-        self._callbacks.sendToSpider(maryJane)
+        if self._callbacks.isInScope(maryJane) == False:
+            self._callbacks.includeInScope(maryJane)
+            self._callbacks.sendToSpider(maryJane)
+        else:
+            self.__stdout.println("[-] already in scope")
 
         return
     
@@ -1054,7 +1070,7 @@ class StartSendLogRunnable(Runnable):
             self.__stdout.println('[-] SplunkHost or Splunk auth key is null :(')
         else: 
             if self._extender._autoSendLogToSplunk == 2:
-                while self._extender._autoSendLogToSplunk == 2:
+                while self._extender._autoSendLogToSplunk == 2 and self._extender._stopThread == False:
                     self._extender.SendLog()
                     #self.__stdout.println(''.join((["[+] Send log to Splunk server every ", str(self._extender._splunkSleep)," Minutes"])))
                     Thread.sleep(1000 * 60 * self._extender._splunkSleep)
@@ -1273,6 +1289,106 @@ class AboutActionListener(ActionListener):
             '',
         ]), 'Information - Privacy Detector Burp Plugin 1.0', JOptionPane.INFORMATION_MESSAGE)
         return
+
+
+def doPassiveScan(self, baseRequestResponse):
+    # look for matches of our passive check grep string
+    #matches = self._get_matches(baseRequestResponse.getResponse(), GREP_STRING_BYTES)
+    #if (len(matches) == 0):
+    #    return None
+
+    # report the issue
+    return [CustomScanIssue(
+        baseRequestResponse.getHttpService(),
+        self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
+        [self._callbacks.applyMarkers(baseRequestResponse, None, matches)],
+        "CMS Info Leakage",
+        "The response contains the string: " + GREP_STRING,
+        "Information")]
+
+def doActiveScan(self, baseRequestResponse, insertionPoint):
+    # make a request containing our injection test in the insertion point
+    #checkRequest = insertionPoint.buildRequest(INJ_TEST)
+    #checkRequestResponse = self._callbacks.makeHttpRequest(
+    #        baseRequestResponse.getHttpService(), checkRequest)
+
+    # look for matches of our active check grep string
+    #matches = self._get_matches(checkRequestResponse.getResponse(), INJ_ERROR_BYTES)
+    #if len(matches) == 0:
+    #    return None
+
+    # get the offsets of the payload within the request, for in-UI highlighting
+    #requestHighlights = [insertionPoint.getPayloadOffsets(INJ_TEST)]
+
+    # report the issue
+    return [CustomScanIssue(
+        baseRequestResponse.getHttpService(),
+        self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
+        [self._callbacks.applyMarkers(checkRequestResponse, requestHighlights, matches)],
+        "Pipe injection",
+        "Submitting a pipe character returned the string: " + INJ_ERROR,
+        "High")]
+
+def consolidateDuplicateIssues(self, existingIssue, newIssue):
+    # This method is called when multiple issues are reported for the same URL 
+    # path by the same extension-provided check. The value we return from this 
+    # method determines how/whether Burp consolidates the multiple issues
+    # to prevent duplication
+    #
+    # Since the issue name is sufficient to identify our issues as different,
+    # if both issues have the same name, only report the existing issue
+    # otherwise report both issues
+    if existingIssue.getIssueName() == newIssue.getIssueName():
+        return -1
+
+    return 0
+
+#
+# class implementing IScanIssue to hold our custom scan issue details
+#
+
+class CustomScanIssue (IScanIssue):
+    def __init__(self, httpService, url, httpMessages, name, detail, severity):
+        self._httpService = httpService
+        self._url = url
+        self._httpMessages = httpMessages
+        self._name = name
+        self._detail = detail
+        self._severity = severity
+
+    def getUrl(self):
+        return self._url
+
+    def getIssueName(self):
+        return self._name
+
+    def getIssueType(self):
+        return 0
+
+    def getSeverity(self):
+        return self._severity
+
+    def getConfidence(self):
+        return "Certain"
+
+    def getIssueBackground(self):
+        pass
+
+    def getRemediationBackground(self):
+        pass
+
+    def getIssueDetail(self):
+        return self._detail
+
+    def getRemediationDetail(self):
+        pass
+
+    def getHttpMessages(self):
+        return self._httpMessages
+
+    def getHttpService(self):
+        return self._httpService
+
 #
 # EOF
 #
