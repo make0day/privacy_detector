@@ -734,9 +734,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         # only process requests
         if messageIsRequest:
-            if toolFlag == 8 or toolFlag == 16:
-                url = self._helpers.analyzeRequest(messageInfo).getUrl()
-                self.__stdout.println("hello from request flag = {} url = {}".format(toolFlag, url))
+            #if toolFlag == 8 or toolFlag == 16:
+                #url = self._helpers.analyzeRequest(messageInfo).getUrl()
+                #self.__stdout.println("hello from request flag = {} url = {}".format(toolFlag, url))
             return
         
         try:
@@ -771,8 +771,9 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
 
                             self.PIIProcessor(toolFlag, responseBody, messageInfo)
                 else:
-                    if toolFlag == 8 or toolFlag == 16:
-                        url = self._helpers.analyzeRequest(messageInfo).getUrl()
+                    return
+                    #if toolFlag == 8 or toolFlag == 16:
+                        #url = self._helpers.analyzeRequest(messageInfo).getUrl()
                         self.__stdout.println("hello from response flag = {} url = {}".format(toolFlag, url))
 
 
