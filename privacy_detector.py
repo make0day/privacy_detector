@@ -23,9 +23,8 @@ from datetime import datetime
 from threading import Lock
 from unicodedata import normalize
 
-from burp import IBurpExtender, ITab, IHttpListener, IScannerListener, IExtensionStateListener, IMessageEditorController, IMessageEditorController
-from burp import IScannerCheck
-from burp import IScanIssue
+from burp import IBurpExtender, ITab, IHttpListener, IExtensionStateListener, IMessageEditorController, IMessageEditorController
+from burp import IScannerCheck, IScanIssue, IScannerListener
 
 from java.awt.event import ActionListener, ItemListener, MouseListener
 from java.awt import Component, Color, Font
@@ -51,7 +50,7 @@ from javax.net.ssl import SSLContext, TrustManager, X509TrustManager, HttpsURLCo
 # implement IBurpExtender
 #
 
-class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtensionStateListener, IMessageEditorController, AbstractTableModel):
+class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScannerCheck, IExtensionStateListener, IMessageEditorController, AbstractTableModel):
     
     #
     # implement IBurpExtender
@@ -139,6 +138,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
         btnList.add(chkFindAll)
         chkFindAll.addItemListener(chkFindAllClicked(self))
 
+        CrawlLabel = JLabel(' Auto : ')
+        btnList.add(CrawlLabel)
+        chkCrawlBox = JCheckBox("Use Crawler  | ", True)
+        btnList.add(chkCrawlBox)
+        chkCrawlBox.addItemListener(chkCrawlBoxClicked(self))
+
         ScanLabel = JLabel(' Scan : ')
         btnList.add(ScanLabel)
         scanBox = JComboBox()
@@ -222,10 +227,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
         # add the custom tab to Burp's UI
         callbacks.addSuiteTab(self)
         
-        # register ourselves as an HTTP listener
+        # register ourselves's handlers
+        #callbacks.registerScannerCheck(self)
         callbacks.registerHttpListener(self)
-        callbacks.registerScannerListener(self);
-        callbacks.registerExtensionStateListener(self);
+        callbacks.registerScannerListener(self)
+        callbacks.registerExtensionStateListener(self)
         return
 
     #
@@ -253,8 +259,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
     #
 
     def StartSendLog(self):
-        self._extender._LogThread = Thread(StartSendLogRunnable(self))
-        thread.start()
+        self._LogThread = Thread(StartSendLogRunnable(self))
+        self._LogThread.start()
         return
 
     #
@@ -328,10 +334,15 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
                 self._callbacks.saveExtensionSetting("RefreshTopList", "2")
                 self._updateTopList = 2
             self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
+
+            # 1 = Do not call SpiderMan, 2  = Call SpiderMan
+            self._callSpiderMan = int(self._callbacks.loadExtensionSetting("UseAutoCrawler"))
+            if self._callSpiderMan == None:
+                self._callbacks.saveExtensionSetting("UseAutoCrawler", "2")
+                self._callSpiderMan = 2
+            self.__stdout.println("[+] Use Auto Crawwer option : {}".format(self._callSpiderMan))
             
             self._callSpiderMan = 2
-            self._spiderDepth = 3
-
 
             # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
             self._autoSendLogToSplunk = int(self._callbacks.loadExtensionSetting("SplunkAutoSend"))
@@ -358,6 +369,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
 
             #self._callbacks.loadExtensionSetting()
             self.__stdout.println("[+] Splulk log options : {} {} {}".format(self._autoSendLogToSplunk, self._splunkSleep, self._splunkHost, self._splunkAuthKey))
+
+            privacydetectorcfgPath = ''.join([os.path.abspath(os.getcwd()), '/privacy_detector.cfg'])
 
         except Exception as e:
             self.__stdout.println(e)
@@ -463,8 +476,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
                             matched = matchobj.group('dual5651')
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
-                            if self._updateTopList == 2:
-                                self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
+                            self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                             IsPIIContaind = True
                         #else:
                             #useless
@@ -480,8 +492,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
                                 #self.__stdout.println(matched)
                                 row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                                 #Todo check case
-                                if self._updateTopList == 2:
-                                    self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
+                                self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
                                 IsPIIContaind = True
                             #else:
                                 #useless
@@ -701,16 +712,16 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         # only process requests
         if messageIsRequest:
-            if toolFlag == 8:
+            if toolFlag == 8 or toolFlag == 16:
                 url = self._helpers.analyzeRequest(messageInfo).getUrl()
-                self.__stdout.println(url)
+                self.__stdout.println("hello from request flag = {} url = {}".format(toolFlag, url))
             return
         
         try:
             if messageInfo != None:
 
                 #From TOOL_PROXY=4 or From TOOL_SCANNER=16 or TOOL_SPIDER
-                if toolFlag == 4 or toolFlag == 16:
+                if toolFlag == 4 or toolFlag == 16 or toolFlag == 8:
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
@@ -737,6 +748,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
                                 self.__stdout.println("[-] getBodyOffset == 0")
 
                             self.PIIProcessor(toolFlag, responseBody, messageInfo)
+                else:
+                    if toolFlag == 8 or toolFlag == 16:
+                        url = self._helpers.analyzeRequest(messageInfo).getUrl()
+                        self.__stdout.println("hello from response flag = {} url = {}".format(toolFlag, url))
 
 
         except Exception as e:
@@ -744,26 +759,94 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
 
         return
 
+    #
+    #
+    #
+
+    def doPassiveScan(self, baseRequestResponse):
+        # look for matches of our passive check grep string
+        #matches = self._get_matches(baseRequestResponse.getResponse(), GREP_STRING_BYTES)
+        #if (len(matches) == 0):
+        #    return None
+
+        self.__stdout.println("Hello from doPassiveScan")
+
+        # report the issue
+        return [CustomScanIssue(
+            baseRequestResponse.getHttpService(),
+            self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
+            [self._callbacks.applyMarkers(baseRequestResponse, None, matches)],
+            "CMS Info Leakage",
+            "The response contains the string: " + GREP_STRING,
+            "Information")]
+
+    #
+    #
+    #
+
+    def doActiveScan(self, baseRequestResponse, insertionPoint):
+        # make a request containing our injection test in the insertion point
+
+        self.__stdout.println("Hello from doActionScan")
+
+        checkRequest = insertionPoint.buildRequest(INJ_TEST)
+        checkRequestResponse = self._callbacks.makeHttpRequest(
+                baseRequestResponse.getHttpService(), checkRequest)
+
+        # look for matches of our active check grep string
+        #matches = self._get_matches(checkRequestResponse.getResponse(), INJ_ERROR_BYTES)
+        #if len(matches) == 0:
+        #    return None
+
+        # get the offsets of the payload within the request, for in-UI highlighting
+        #requestHighlights = [insertionPoint.getPayloadOffsets(INJ_TEST)]
+
+        # report the issue
+        return [CustomScanIssue(
+            baseRequestResponse.getHttpService(),
+            self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
+            [self._callbacks.applyMarkers(checkRequestResponse, requestHighlights, matches)],
+            "Pipe injection",
+            "Submitting a pipe character returned the string: " + INJ_ERROR,
+            "High")]
+
+    #
+    #
+    #
+
+    def consolidateDuplicateIssues(self, existingIssue, newIssue):
+        # This method is called when multiple issues are reported for the same URL 
+        # path by the same extension-provided check. The value we return from this 
+        # method determines how/whether Burp consolidates the multiple issues
+        # to prevent duplication
+        #
+        # Since the issue name is sufficient to identify our issues as different,
+        # if both issues have the same name, only report the existing issue
+        # otherwise report both issues
+        if existingIssue.getIssueName() == newIssue.getIssueName():
+            self.__stdout.println("[-] already in Issue")
+            return -1
+
+        return 0
+
+    #
+    #
+    #
+
 
     def amazingSpiderMan(self, host, path):
 
         url = ''
 
-        if self._spiderDepth == 3:
-            url = ''.join([host, '/'])
-        elif self._spiderDepth == 2:
-            if path.rfind("/") != -1 and path[:path.rfind("/")].rfind("/") != -1:
-                url = ''.join([host,path[:path[:path.rfind("/")].rfind("/")]])
-            else:
-                url = ''.join([host, '/'])
+        url = ''.join([host, '/'])
 
-        self.__stdout.println(''.join(['MaryJane : Please help me, Spider man!! ', url]))
+        self.__stdout.println(''.join(['Maryjane : Please help me, Spider man!! ', url]))
         maryJane = URL(url)
         if self._callbacks.isInScope(maryJane) == False:
             self._callbacks.includeInScope(maryJane)
             self._callbacks.sendToSpider(maryJane)
         else:
-            self.__stdout.println("[-] already in scope")
+            self.__stdout.println("[-] She's not Maryjane :(")
 
         return
     
@@ -872,53 +955,64 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IExtens
 
         try:
             row = self._topHitTable.get(key)
-            if row:
-                if row._hit >= 1:
-                    row._hit = row._hit + 1
-                    row._linkedrow = linkedrow
-                else:
-                    row._hit = 1
+
+            if self._updateTopList == 1:
+                if row == None:
+                    return
+                else: 
+                    if self._callSpiderMan == 2:
+                        self.amazingSpiderMan(host, path)
+                    else:
+                        return
             else:
-                self._HitTablelock.acquire()
-                self._topHitTable.put(key, HitEntry(host, path, piitype, method, linkedrow))
-                self._HitTablelock.release()
 
-            CopyModel = DefaultListModel()
-
-            TopHitList = []
-            for i in self._topHitTable.keySet():
-                #Case1
-                #Exist in table
                 if row:
-                    if i == key:
-                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                    if row._hit >= 1:
+                        row._hit = row._hit + 1
+                        row._linkedrow = linkedrow
                     else:
-                        #Case2
-                        #Not updated - do nothing
-                        CopyRow = self._topHitTable.get(i)
-                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(CopyRow._hit,CopyRow._host,CopyRow._path,CopyRow._method))
-                #Case3
-                #Not exist in table == New item
+                        row._hit = 1
                 else:
-                    row = self._topHitTable.get(key)
+                    self._HitTablelock.acquire()
+                    self._topHitTable.put(key, HitEntry(host, path, piitype, method, linkedrow))
+                    self._HitTablelock.release()
+
+                CopyModel = DefaultListModel()
+
+                TopHitList = []
+                for i in self._topHitTable.keySet():
+                    #Case1
+                    #Exist in table
                     if row:
-                        #Now, Exist (Added new)
-                        TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
-                        if self._callSpiderMan == 2:
-                            self.amazingSpiderMan(host, path)
+                        if i == key:
+                            TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                        else:
+                            #Case2
+                            #Not updated - do nothing
+                            CopyRow = self._topHitTable.get(i)
+                            TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(CopyRow._hit,CopyRow._host,CopyRow._path,CopyRow._method))
+                    #Case3
+                    #Not exist in table == New item
                     else:
-                        #Error not possible?
-                        self.__stdout.println("[-] row zero == 0")
+                        row = self._topHitTable.get(key)
+                        if row:
+                            #Now, Exist (Added new)
+                            TopHitList.append("{} Hits! | URL: {}{} | Method: {}".format(row._hit,row._host,row._path,row._method))
+                            if self._callSpiderMan == 2:
+                                self.amazingSpiderMan(host, path)
+                        else:
+                            #Error not possible?
+                            self.__stdout.println("[-] row zero == 0")
 
-            TopHitList.sort(key=lambda fname: int(fname.split(' ')[0]), reverse=True)
+                TopHitList.sort(key=lambda fname: int(fname.split(' ')[0]), reverse=True)
 
-            for item in TopHitList:
-                CopyModel.addElement(item)
+                for item in TopHitList:
+                    CopyModel.addElement(item)
 
-            self._topHitMap.setModel(CopyModel)
+                self._topHitMap.setModel(CopyModel)
 
-            #self._topHitLogger.validate()
-            #self._topHitLogger.repaint()
+                #self._topHitLogger.validate()
+                #self._topHitLogger.repaint()
 
         except Exception as e:
             self.__stdout.println(e)
@@ -1164,6 +1258,31 @@ class chkFindAllClicked(ItemListener):
         else:
             self._extender._scanningDepth = 1
         return
+
+#
+# class to handle check box
+#
+
+class chkCrawlBoxClicked(ItemListener):
+
+    def __init__(self, extender):
+        super(chkCrawlBoxClicked, self).__init__()
+        self._extender = extender
+        self._callbacks = self._extender._callbacks
+        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+
+    def itemStateChanged(self, ItemEvent):
+        if ItemEvent.getStateChange()==1:
+            if self._extender._callSpiderMan == 2:
+                self._extender._callSpiderMan = 1
+            else:
+                self._extender._callSpiderMan = 2
+            self._callbacks.saveExtensionSetting("UseAutoCrawler", str(self._extender._callSpiderMan))
+        else:
+            self._extender._callSpiderMan = 1
+        return
+
+
 #
 # class to scan option
 #
@@ -1289,60 +1408,6 @@ class AboutActionListener(ActionListener):
             '',
         ]), 'Information - Privacy Detector Burp Plugin 1.0', JOptionPane.INFORMATION_MESSAGE)
         return
-
-
-def doPassiveScan(self, baseRequestResponse):
-    # look for matches of our passive check grep string
-    #matches = self._get_matches(baseRequestResponse.getResponse(), GREP_STRING_BYTES)
-    #if (len(matches) == 0):
-    #    return None
-
-    # report the issue
-    return [CustomScanIssue(
-        baseRequestResponse.getHttpService(),
-        self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
-        [self._callbacks.applyMarkers(baseRequestResponse, None, matches)],
-        "CMS Info Leakage",
-        "The response contains the string: " + GREP_STRING,
-        "Information")]
-
-def doActiveScan(self, baseRequestResponse, insertionPoint):
-    # make a request containing our injection test in the insertion point
-    #checkRequest = insertionPoint.buildRequest(INJ_TEST)
-    #checkRequestResponse = self._callbacks.makeHttpRequest(
-    #        baseRequestResponse.getHttpService(), checkRequest)
-
-    # look for matches of our active check grep string
-    #matches = self._get_matches(checkRequestResponse.getResponse(), INJ_ERROR_BYTES)
-    #if len(matches) == 0:
-    #    return None
-
-    # get the offsets of the payload within the request, for in-UI highlighting
-    #requestHighlights = [insertionPoint.getPayloadOffsets(INJ_TEST)]
-
-    # report the issue
-    return [CustomScanIssue(
-        baseRequestResponse.getHttpService(),
-        self._helpers.analyzeRequest(baseRequestResponse).getUrl(),
-        [self._callbacks.applyMarkers(checkRequestResponse, requestHighlights, matches)],
-        "Pipe injection",
-        "Submitting a pipe character returned the string: " + INJ_ERROR,
-        "High")]
-
-def consolidateDuplicateIssues(self, existingIssue, newIssue):
-    # This method is called when multiple issues are reported for the same URL 
-    # path by the same extension-provided check. The value we return from this 
-    # method determines how/whether Burp consolidates the multiple issues
-    # to prevent duplication
-    #
-    # Since the issue name is sufficient to identify our issues as different,
-    # if both issues have the same name, only report the existing issue
-    # otherwise report both issues
-    if existingIssue.getIssueName() == newIssue.getIssueName():
-        return -1
-
-    return 0
-
 #
 # class implementing IScanIssue to hold our custom scan issue details
 #
@@ -1388,7 +1453,6 @@ class CustomScanIssue (IScanIssue):
 
     def getHttpService(self):
         return self._httpService
-
 #
 # EOF
 #
