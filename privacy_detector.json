@@ -1,0 +1,103 @@
+{
+  "crawler": {
+    "crawl_limits": {
+      "maximum_crawl_time": 3000,
+      "maximum_request_count": 0,
+      "maximum_unique_locations": 9000
+    },
+    "crawl_optimization": {
+      "breadth_first_until_depth": 5,
+      "consolidation_success_threshold": 9,
+      "crawl_strategy": "most complete",
+      "crawl_strategy_customized": false,
+      "discovered_destinations_group_size": 20,
+      "error_destination_multiplier": 2,
+      "form_destination_optimization_threshold": 6,
+      "form_submission_optimization_threshold": 30,
+      "idle_time_for_mutations": 100,
+      "link_fingerprinting_threshold": 4,
+      "logging_directory": "",
+      "logging_enabled": false,
+      "loopback_link_fingerprinting_threshold": 4,
+      "maximum_consolidation_items": 15,
+      "maximum_form_field_permutations": 15,
+      "maximum_form_permutations": 50,
+      "maximum_link_depth": 5,
+      "maximum_state_changing_sequences": 40,
+      "maximum_state_changing_sequences_length": 5,
+      "maximum_state_changing_sequences_per_destination": 7,
+      "maximum_unmatched_anchor_tolerance": 10,
+      "maximum_unmatched_form_tolerance": 0,
+      "maximum_unmatched_frame_tolerance": 0,
+      "maximum_unmatched_iframe_tolerance": 10,
+      "maximum_unmatched_image_area_tolerance": 0,
+      "maximum_unmatched_redirect_tolerance": 0,
+      "recent_destinations_buffer_size": 12,
+      "total_unmatched_feature_tolerance": 10,
+      "trimmed_consolidation_items": 7
+    },
+    "customization": {
+      "allow_out_of_scope_resources": true,
+      "browser_based_navigation_mode": true,
+      "customize_user_agent": true,
+      "maximum_items_from_sitemap": 5000,
+      "maximum_speculative_links": 5000,
+      "parse_api_definitions": true,
+      "request_robots_txt": false,
+      "request_sitemap": true,
+      "request_speculative": true,
+      "submit_forms": true,
+      "timeout_for_in_progress_resource_requests": 10,
+      "use_headed_browser_for_crawl": true,
+      "user_agent": "Privacy Detector - https://github.com/make0day/privacy_detector"
+    },
+    "error_handling": {
+      "number_of_follow_up_passes": 1,
+      "pause_task_requests_timed_out_count": 10,
+      "pause_task_requests_timed_out_percentage": 0
+    },
+    "login_functions": {
+      "attempt_to_self_register_a_user": false,
+      "trigger_login_failures": false
+    }
+  },
+  "project_options": {
+    "sessions": {
+      "cookie_jar": {
+        "monitor_extender": true,
+        "monitor_intruder": false,
+        "monitor_proxy": true,
+        "monitor_repeater": false,
+        "monitor_scanner": true,
+        "monitor_sequencer": false
+      },
+      "macros": {
+        "macros": []
+      },
+      "session_handling_rules": {
+        "rules": [
+          {
+            "actions": [
+              {
+                "enabled": true,
+                "match_cookies": "all_except",
+                "type": "use_cookies"
+              }
+            ],
+            "description": "Use cookies from Burp's cookie jar",
+            "enabled": true,
+            "exclude_from_scope": [],
+            "include_in_scope": [],
+            "named_params": [],
+            "restrict_scope_to_named_params": false,
+            "tools_scope": [
+              "Scanner"
+            ],
+            "url_scope": "all",
+            "url_scope_advanced_mode": false
+          }
+        ]
+      }
+    }
+  }
+}

@@ -370,7 +370,29 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             #self._callbacks.loadExtensionSetting()
             self.__stdout.println("[+] Splulk log options : {} {} {}".format(self._autoSendLogToSplunk, self._splunkSleep, self._splunkHost, self._splunkAuthKey))
 
-            privacydetectorcfgPath = ''.join([os.path.abspath(os.getcwd()), '/privacy_detector.cfg'])
+
+            privacydetectorcfgPath = ''.join([os.path.abspath(os.getcwd()), '/privacy_detector.json'])
+            self.__stdout.println("[+] Load configuration file : {}".format(privacydetectorcfgPath))
+            if os.path.exists(privacydetectorcfgPath):
+                with open('./privacy_detector.json', 'r') as cfg_handle:
+                    parsed = json.dumps(json.load(cfg_handle))
+                    self._callbacks.loadConfigFromJson(parsed)
+            else:
+                urlStream = URL('https://raw.githubusercontent.com/make0day/privacy_detector/main/privacy_detector.json').openStream()
+                if urlStream != None:
+                    downloadedConfig = self._helpers.bytesToString(urlStream.readAllBytes())
+                    downloadedConfig = normalize('NFC', downloadedConfig)
+                    downloadedConfig = unicode(downloadedConfig, 'utf-8').decode('utf-8')
+                    outStream = OutputStreamWriter(FileOutputStream(privacydetectorcfgPath), 'UTF-8')
+                    outStream.write(unicode(downloadedConfig))
+                    if outStream != None:
+                        outStream.close()
+                    if downloadedConfig != None:
+                        urlStream.close()
+                    parsed = json.dumps(json.loads(downloadedConfig))
+                    self._callbacks.loadConfigFromJson(parsed)
+            self.__stdout.println("[+] Configuration loaded")
+
 
         except Exception as e:
             self.__stdout.println(e)
