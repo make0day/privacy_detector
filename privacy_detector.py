@@ -79,52 +79,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
         self.__stdout.println("Coded by Samuel Koo & Daniel Koo")
         self.__stdout.println("Project github : https://github.com/make0day/privacy_detector")
 
-        # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
-        self._scanningType = callbacks.loadExtensionSetting("SearchType")
-        if self._scanningType == None:
-            callbacks.saveExtensionSetting("SearchType", "1")
-            self._scanningType = 1
-        self.__stdout.println("[+] Current Scanning Mime Type  option: {}".format(self._scanningType))
-
-        # 1 = Find one item from the page, 1 > = Find all items
-        self._scanningDepth = callbacks.loadExtensionSetting("ScanningDepth")
-        if self._scanningDepth == None:
-            callbacks.saveExtensionSetting("ScanningDepth", "2")
-            self._scanningDepth = 2
-        self.__stdout.println("[+] Current Scanning Depth option : {}".format(self._scanningDepth))
-
-        # 1 = Do not update top list, 2  = Update top list
-        self._updateTopList = callbacks.loadExtensionSetting("RefreshTopList")
-        if self._updateTopList == None:
-            callbacks.saveExtensionSetting("RefreshTopList", "2")
-            self._updateTopList = 2
-        self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
-
-        # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
-        self._autoSendLogToSplunk = callbacks.loadExtensionSetting("SplunkAutoSend")
-        if self._autoSendLogToSplunk == None:
-            callbacks.saveExtensionSetting("SplunkAutoSend", "2")
-            self._autoSendLogToSplunk = 2
-        # Every 5 Mins
-        self._splunkSleep = callbacks.loadExtensionSetting("SplunkSleep")
-        if self._splunkSleep == None:
-            callbacks.saveExtensionSetting("SplunkSleep", "5")
-            self._splunkSleep = 5
-
-        # Splunk host
-        self._splunkHost = callbacks.loadExtensionSetting("SplunkHost")
-        if self._splunkHost == None:
-            callbacks.saveExtensionSetting("SplunkHost", "splunklogserver.com")
-            self._splunkHost = 'splunklogserver.com'
-
-        # Your splunk auth token
-        self._splunkAuthKey = callbacks.loadExtensionSetting("SplunkToken")
-        if self._splunkAuthKey == None:
-            callbacks.saveExtensionSetting("SplunkToken", "pleasefillyoursplunktoken")
-            self._splunkAuthKey = 'pleasefillyoursplunktoken'
-
-        callbacks.loadExtensionSetting()
-        self.__stdout.println("[+] Splulk log options : {} {} {}".format(self._autoSendLogToSplunk, self._splunkSleep, self._splunkHost, self._splunkAuthKey))
+        self.LoadSettings()
 
         patternFile = self.LoadRulesetFile()
         self.PrecompilePIIRuleSets(patternFile)
@@ -333,6 +288,65 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IMessageEditorController,
             self.__stdout.println(e)
         return
 
+    #
+    # 
+    #
+
+
+    def LoadSettings(self):
+
+        try:
+            self.__stdout.println("[+] Load extension Settings...")
+            # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
+            self._scanningType = self._callbacks.loadExtensionSetting("SearchType")
+            if self._scanningType == None:
+                self.callbacks.saveExtensionSetting("SearchType", "1")
+                self._scanningType = 1
+            self.__stdout.println("[+] Current Scanning Mime Type  option: {}".format(self._scanningType))
+
+            # 1 = Find one item from the page, 1 > = Find all items
+            self._scanningDepth = self._callbacks.loadExtensionSetting("ScanningDepth")
+            if self._scanningDepth == None:
+                self._callbacks.saveExtensionSetting("ScanningDepth", "2")
+                self._scanningDepth = 2
+            self.__stdout.println("[+] Current Scanning Depth option : {}".format(self._scanningDepth))
+
+            # 1 = Do not update top list, 2  = Update top list
+            self._updateTopList = self._callbacks.loadExtensionSetting("RefreshTopList")
+            if self._updateTopList == None:
+                callbacks.saveExtensionSetting("RefreshTopList", "2")
+                self._updateTopList = 2
+            self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
+
+            # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
+            self._autoSendLogToSplunk = self._callbacks.loadExtensionSetting("SplunkAutoSend")
+            if self._autoSendLogToSplunk == None:
+                self.callbacks.saveExtensionSetting("SplunkAutoSend", "2")
+                self._autoSendLogToSplunk = 2
+            # Every 5 Mins
+            self._splunkSleep = self._callbacks.loadExtensionSetting("SplunkSleep")
+            if self._splunkSleep == None:
+                self.callbacks.saveExtensionSetting("SplunkSleep", "5")
+                self._splunkSleep = 5
+
+            # Splunk host
+            self._splunkHost = self._callbacks.loadExtensionSetting("SplunkHost")
+            if self._splunkHost == None:
+                self.callbacks.saveExtensionSetting("SplunkHost", "splunklogserver.com")
+                self._splunkHost = 'splunklogserver.com'
+
+            # Your splunk auth token
+            self._splunkAuthKey = self._callbacks.loadExtensionSetting("SplunkToken")
+            if self._splunkAuthKey == None:
+                self.callbacks.saveExtensionSetting("SplunkToken", "pleasefillyoursplunktoken")
+                self._splunkAuthKey = 'pleasefillyoursplunktoken'
+
+            #self._callbacks.loadExtensionSetting()
+            self.__stdout.println("[+] Splulk log options : {} {} {}".format(self._autoSendLogToSplunk, self._splunkSleep, self._splunkHost, self._splunkAuthKey))
+
+        except Exception as e:
+            self.__stdout.println(e)
+        return
 
     #
     # Precompile Regex rulesets
@@ -1104,6 +1118,7 @@ class chkFindAllClicked(ItemListener):
                 self._extender._scanningDepth = 1
             else:
                 self._extender._scanningDepth = 2
+            self._callbacks.saveExtensionSetting("ScanningDepth", str(self._extender._scanningDepth))
         else:
             self._extender._scanningDepth = 1
         return
@@ -1122,6 +1137,7 @@ class scanBoxClicked(ItemListener):
     def itemStateChanged(self, ItemEvent):
         if ItemEvent.getStateChange()==1:
             self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
+            self._callbacks.saveExtensionSetting("SearchType", str(self._extender._scanningType))
             #self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
         return
 
@@ -1145,6 +1161,7 @@ class chkTophitClicked(ItemListener):
             else: 
                 self._extender._updateTopList = 1
                 #self._extender._topHitLogger.remove(self._extender._topHitMap)
+            self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
         else:
             self._extender._updateTopList = 1
         #self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
