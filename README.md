@@ -20,7 +20,8 @@ To install Privacy Detector, you have to:
 1. Live PII Detection : Privacy Detector will parse all http history generated from that moment and it will find any PII.
 2. Parse Full HTTP history : The plugin will parse full requests history.
 3. Top Hit URL Dashboard : Dashboard to see which URLs are frequently contain PII.
-4. Others : 
+4. Auto Crawling feature : It will crawl web pages while maintains session and automatically collects more PII and credentials.
+5. Others : 
 - 1) Send log to Splunk server :  The plugin will send send logs to Splunk server with JSON request.
 - - Options :
 - - 1. SplunkHost : Your log server host name, ex : splunklogserver
@@ -29,10 +30,11 @@ To install Privacy Detector, you have to:
 - - 4. SplunkAutoSend : Whether use auto send log or not, ex: 1=no, 2=yes
 - 2) Send log as a .csv file : The PII detection results can be exported in .CSV format.
 - 3) Clear history : The function to clear logs.
-5. Configuration:
+6. Configuration:
 - 1) Top list refresh : Turn on and off refresh Top hit list (Default : ON)
 - 2) Search : Whether to find all cases that exist within a web page or just one case. (Default : Find all)
 - 3) Scan : Quick Scan (JSON only) / Deep Scan (JSON/XML/HTML/TEXT) / Full Scan (Except Images)
+- 4) Auto : Use Crawler (Default : Use) 
 
 ## Supported formats
 
@@ -98,6 +100,8 @@ Privacy Detector was born in 2022 by Koo Brothers, for finding privacy informati
 
 * Jan / 13 / 2022: Privacy Detector is integrated with Burp Spider Now!
 
-Please refer to the next page to see how to set it up : 
-[How to configure Burp Scanner Spider feature](https://github.com/make0day/privacy_detector/wiki/How-to-configure-Burp-Scanner---Spider-feature)
+**1.0.2**
+
+* Jan / 14 / 2022: Privacy Detector has web page crawler feature. 
+
 
