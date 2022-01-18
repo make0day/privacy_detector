@@ -152,7 +152,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
         vt.add('Deep Scan')
         vt.add('Full Scan')
         scanBox.setModel(DefaultComboBoxModel(vt))
-        scanBox.getSelectionModel().select(1);
+        scanBox.setSelectedIndex(1)
         btnList.add(scanBox)
         scanBox.addItemListener(scanBoxClicked(self))
 
