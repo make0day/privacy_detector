@@ -25,7 +25,7 @@
          "type": "EmailAddress",
          "description": "Email address information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>[a-z0-9_\\.-]{1,25}@[\\da-z\\.-]+\\.[^pjg]{1}[a-z\\.]{2,6})\""
+         "expression": "\"(?P<dual5651>[a-z0-9_\\.-]{1,35}@[\\da-z\\.-]+\\.[^pjg]{1}[a-z\\.]{2,6})\""
       },
       {
          "use": true,
@@ -140,14 +140,14 @@
          "expression": "\"(?P<dual5651>[김이박][가-힣]{2})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "Ipv4Address",
          "description": "IP v4 address information",
          "level": "low",
          "expression": "\"(?P<dual5651>(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "URLAddress",
          "description": "URL address information",
          "comment": "[\\w@?^=%&/~+#-]",
@@ -162,42 +162,42 @@
          "expression": "\"(?P<dual5651>([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AccessKeyType",
          "description": "Multi type potential access key information",
          "level": "info",
          "expression": "\"(?P<dual5651>([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}))\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AWSSessionToken",
          "description": "AWS session token information",
          "level": "critical",
          "expression": "\"(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=]))\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AWSAccessKey",
          "description": "AWS access key information",
          "level": "high",
          "expression": "\"(?P<dual5651>AKIA[0-9A-Z]{16})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "TencentSecretId",
          "description": "Tencent secret ID information",
          "level": "high",
          "expression": "\"(?P<dual5651>AKID[A-Za-z0-9]{34})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "GoogleAPIToken",
          "description": "Google API token information",
          "level": "high",
          "expression": "\"(?P<dual5651>AIza[0-9A-Za-z-_]{35})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AWSSecretKey",
          "description": "AWS secret key information",
          "level": "critical",
@@ -211,49 +211,49 @@
          "expression": "\"(?P<dual5651>-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AuthorizationBasic",
          "description": "Authorization basic information",
          "level": "high",
          "expression": "\"(?P<dual5651>Basic[[:space:]][a-zA-Z0-9+\\/]+\\=*)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AuthorizationBearer1",
          "description": "Authorization bearer information",
          "level": "high",
          "expression": "\"(?P<dual5651>Bearer[[:space:]][\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AuthorizationBearer2",
          "description": "Authorization bearer information",
          "level": "high",
          "expression": "\"(?P<dual5651>Bearer[[:space:]][A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "AuthorizationAPI",
          "description": "Authorization API information",
          "level": "high",
          "expression": "\"(?P<dual5651>api[key|[[:space:]]*]+[a-zA-Z0-9_\\-]+)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "GoogleOAuthToken",
          "description": "Google OAuth token information",
          "level": "high",
          "expression": "\"(?P<dual5651>ya29\\.[0-9A-Za-z\\\\-_]+)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "GoogleOAuthKey",
          "description": "Google OAuth key information",
          "level": "high",
          "expression": "\"(?P<dual5651>[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com)\""
       },
       {
-         "use": false,
+         "use": true,
          "type": "FacebookAuthToken",
          "description": "Facebook Auth token information",
          "level": "high",
