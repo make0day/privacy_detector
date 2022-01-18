@@ -152,6 +152,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
         vt.add('Deep Scan')
         vt.add('Full Scan')
         scanBox.setModel(DefaultComboBoxModel(vt))
+        scanBox.getSelectionModel().select(1);
         btnList.add(scanBox)
         scanBox.addItemListener(scanBoxClicked(self))
 
@@ -317,8 +318,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
             self._scanningType = int(self._callbacks.loadExtensionSetting("SearchType"))
             if self._scanningType == None:
-                self._callbacks.saveExtensionSetting("SearchType", "1")
-                self._scanningType = 1
+                self._callbacks.saveExtensionSetting("SearchType", "2")
+                self._scanningType = 2
             self.__stdout.println("[+] Current Scanning Mime Type  option: {}".format(self._scanningType))
 
             # 1 = Find one item from the page, 1 > = Find all items
