@@ -147,7 +147,7 @@
          "expression": "\"(?P<dual5651>(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "URLAddress",
          "description": "URL address information",
          "comment": "[\\w@?^=%&/~+#-]",
