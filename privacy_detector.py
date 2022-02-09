@@ -316,24 +316,30 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             self.__stdout.println("[+] Load extension Settings...")
             
             # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
-            self._scanningType = int(self._callbacks.loadExtensionSetting("SearchType"))
+            self._scanningType = self._callbacks.loadExtensionSetting("SearchType")
             if self._scanningType == None:
                 self._callbacks.saveExtensionSetting("SearchType", "2")
                 self._scanningType = 2
+            else:
+                self._scanningType = int(self._scanningType)
             self.__stdout.println("[+] Current Scanning Mime Type  option: {}".format(self._scanningType))
 
             # 1 = Find one item from the page, 1 > = Find all items
-            self._scanningDepth = int(self._callbacks.loadExtensionSetting("ScanningDepth"))
+            self._scanningDepth = self._callbacks.loadExtensionSetting("ScanningDepth")
             if self._scanningDepth == None:
                 self._callbacks.saveExtensionSetting("ScanningDepth", "2")
                 self._scanningDepth = 2
+            else:
+                self._scanningDepth = int(self._scanningDepth)
             self.__stdout.println("[+] Current Scanning Depth option : {}".format(self._scanningDepth))
                       
             # 1 = Do not update top list, 2  = Update top list
-            self._updateTopList = int(self._callbacks.loadExtensionSetting("RefreshTopList"))
+            self._updateTopList = self._callbacks.loadExtensionSetting("RefreshTopList")
             if self._updateTopList == None:
                 self._callbacks.saveExtensionSetting("RefreshTopList", "2")
                 self._updateTopList = 2
+            else:
+                self._updateTopList = int(self._updateTopList)
             self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
 
             # 1 = Do not call SpiderMan, 2  = Call SpiderMan
@@ -341,15 +347,19 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             if self._callSpiderMan == None:
                 self._callbacks.saveExtensionSetting("UseAutoCrawler", "2")
                 self._callSpiderMan = 2
+            else:
+                self._callSpiderMan = int(self._callSpiderMan)
             self.__stdout.println("[+] Use Auto Crawwer option : {}".format(self._callSpiderMan))
             
             self._callSpiderMan = 2
 
             # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
-            self._autoSendLogToSplunk = int(self._callbacks.loadExtensionSetting("SplunkAutoSend"))
+            self._autoSendLogToSplunk = self._callbacks.loadExtensionSetting("SplunkAutoSend")
             if self._autoSendLogToSplunk == None:
                 self._callbacks.saveExtensionSetting("SplunkAutoSend", "2")
                 self._autoSendLogToSplunk = 2
+            else:
+                self._autoSendLogToSplunk = int(self._autoSendLogToSplunk)
             # Every 5 Mins
             self._splunkSleep = int(self._callbacks.loadExtensionSetting("SplunkSleep"))
             if self._splunkSleep == None:
