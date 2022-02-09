@@ -343,7 +343,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             self.__stdout.println("[+] Refresh top Hit List option : {}".format(self._updateTopList))
 
             # 1 = Do not call SpiderMan, 2  = Call SpiderMan
-            self._callSpiderMan = int(self._callbacks.loadExtensionSetting("UseAutoCrawler"))
+            self._callSpiderMan = self._callbacks.loadExtensionSetting("UseAutoCrawler")
             if self._callSpiderMan == None:
                 self._callbacks.saveExtensionSetting("UseAutoCrawler", "2")
                 self._callSpiderMan = 2
