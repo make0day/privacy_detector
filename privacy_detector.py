@@ -507,8 +507,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                 if self._scanningDepth == 1:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
+                        #self.__stdout.println(matchobj.groups())
                         if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
                             matched = matchobj.group('dual5651')
+                            #self.__stdout.println(matched)
                             row = self.AddLogEntry(toolFlag, self._callbacks.saveBuffersToTempFiles(messageInfo), HostProtocol, Path, matched, PIIType, Method)
                             #Todo check case
                             self.AddHitEntry(HostProtocol, Path, PIIType, Method, row)
@@ -522,6 +524,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                     matchObj_iter = regex.finditer(responseBody)
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
+                            #self.__stdout.println(matchobj.groups())
                             if matchobj.group('dual5651') != None and matchobj.group('dual5651') != '':
                                 matched = matchobj.group('dual5651')
                                 #self.__stdout.println(matched)

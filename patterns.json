@@ -11,140 +11,140 @@
          "type": "MobileNumber",
          "description": "Mobile cell phone number information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>010-?[0-9]{3,4}-?[0-9]{4})\""
+         "expression": "(?P<dual5651>010-?[0-9]{3,4}-?[0-9]{4})"
       },
       {
          "use": true,
          "type": "PhoneNumber",
          "description": "Telephone number information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>0[2-6][1-5]?-?[2-9]\\d{2,3}-?\\d{4})\""
+         "expression": "(?P<dual5651>0[2-6][1-5]?-?[2-9]\\d{2,3}-?\\d{4})"
       },
       {
          "use": true,
          "type": "EmailAddress",
          "description": "Email address information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>[a-z0-9_\\.-]{1,35}@[\\da-z\\.-]+\\.[^pjg]{1}[a-z\\.]{2,6})\""
+         "expression": "(?P<dual5651>[a-z0-9_\\.-]{1,35}@[\\da-z\\.-]+[\\.][^pjg]{1}[a-z\\.]{2,6})"
       },
       {
          "use": true,
          "type": "ResidentRegistrationNumber",
          "description": "RRN information",
          "level": "high",
-         "expression": "\"(?P<dual5651>((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-?([1-4]\\d{6}))\""
+         "expression": "(?P<dual5651>((\\d{2})(0\\d|1[0-2])([0-2]\\d|3[0-1]))-?([1-4]\\d{6}))"
       },
       {
          "use": true,
          "type": "BusinessRegistrationNumber",
          "description": "Corporate registration number information",
          "level": "low",
-         "expression": "\"(?P<dual5651>(\\d{3})+-+(\\d{2})+-+\\d{5})\""
+         "expression": "(?P<dual5651>(\\d{3})+-+(\\d{2})+-+\\d{5})"
       },
       {
          "use": true,
          "type": "NationalInsuranceNumber",
          "description": "National insurance number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[1257][-~.[:space:]][0-9]{10})\""
+         "expression": "(?P<dual5651>[1257][-~.[:space:]][0-9]{10})"
       },
       {
          "use": true,
          "type": "PCCCNumber",
          "description": "Personal customs clearance code information",
          "level": "high",
-         "expression": "\"(?P<dual5651>P[0-9]{12})\""
+         "expression": "(?P<dual5651>P[0-9]{12})"
       },
       {
          "use": true,
          "type": "ForeinerRegistrationNumber",
          "description": "Foreiner registration number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[01][0-9]{5}[[:space:]-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})\""
+         "expression": "(?P<dual5651>[01][0-9]{5}[[:space:]-]+[1-8][0-9]{6}|[2-9][0-9]{5}[[:space:]~-]+[1256][0-9]{6})"
       },
       {
          "use": true,
          "type": "PassportNumber",
          "description": "Passport number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>([MSRGD]\\d{8}|(PM|PS|PR|PO|PD|PT)\\d{7}))\""
+         "expression": "(?P<dual5651>([MSRGD]\\d{8}|(PM|PS|PR|PO|PD|PT)\\d{7}))"
       },
       {
          "use": true,
          "type": "CreditCardNumber",
          "description": "Credit card number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[34569][0-9]{3}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4})\""
+         "expression": "(?P<dual5651>[34569][0-9]{3}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4}[-~.[:space:]]?[0-9]{4})"
       },
       {
          "use": false,
          "type": "CreditCardNumber2",
          "description": "Credit card number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>(([3-6]|9)\\d{3}-?\\d{4}-?\\d{4}-?(\\d{4}|\\d{3})|37\\d{2}-?\\d{6}-?\\d{5}))\""
+         "expression": "(?P<dual5651>(([3-6]|9)\\d{3}-?\\d{4}-?\\d{4}-?(\\d{4}|\\d{3})|37\\d{2}-?\\d{6}-?\\d{5}))"
       },
       {
          "use": false,
          "type": "MasterCardNumber",
          "description": "Master credit card number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>5[1-5][-~.\\d]{14,17})\""
+         "expression": "(?P<dual5651>5[1-5][-~.\\d]{14,17})"
       },
       {
          "use": false,
          "type": "VisaCardNumber",
          "description": "Visa credit card number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>4[-~.\\d]{15,18})\""
+         "expression": "(?P<dual5651>4[-~.\\d]{15,18})"
       },
       {
          "use": false,
          "type": "AmexCardNumber",
          "description": "Amex credit card number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>3[47][-~.\\d]{13,16})\""
+         "expression": "(?P<dual5651>3[47][-~.\\d]{13,16})"
       },
       {
          "use": true,
          "type": "DriverLicenseNumber",
          "description": "Driver license number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[1-2][0-9]-\\d{2}-\\d{6}-\\d{2})\""
+         "expression": "(?P<dual5651>[1-2][0-9]-\\d{2}-\\d{6}-\\d{2})"
       },
       {
          "use": false,
          "type": "BankAccountNumber",
          "description": "Bank account number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-]{2,6})\""
+         "expression": "(?P<dual5651>[0-9,\\-]{3,6}\\-[0-9,\\-]{2,6}\\-[0-9,\\-]{2,6})"
       },
       {
          "use": false,
          "type": "BankAccountNumber2",
          "description": "Bank account number information",
          "level": "high",
-         "expression": "\"(?P<dual5651>([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6}))\""
+         "expression": "(?P<dual5651>([0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{3}[-~.[:space:]]([0-9]{5,6}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{5}|[0-9]{2,3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{7}|[0-9]{2}[-~.[:space:]][0-9]{4,6}[-~.[:space:]][0-9]|[0-9]{5}[-~.[:space:]][0-9]{3}[-~.[:space:]][0-9]{2}|[0-9]{2}[-~.[:space:]][0-9]{5}[-~.[:space:]][0-9]{3}|[0-9]{4}[-~.[:space:]][0-9]{4}[-~.[:space:]][0-9]{3}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{3}|[0-9]{2}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{7})|[0-9]{4}[-~.[:space:]]([0-9]{3}[-~.[:space:]][0-9]{6}|[0-9]{2}[-~.[:space:]][0-9]{6}[-~.[:space:]][0-9])|[0-9]{5}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{6}|[0-9]{6}[-~.[:space:]][0-9]{2}[-~.[:space:]][0-9]{5,6}))"
       },
       {
          "use": false,
          "type": "RoadAddress",
          "description": "Address information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>([가-힣]{1,10}[구군시도읍리면동가길리통][[:space:]]{0,2}){1,4}[가-힣\\d]{0,10}[[:space:]]{0,2}[1-9]{1}[0-9]{1,5}-?[0-9]{0,3}[[:space:]]{0,2}[가-힣\\d]{0,10})\""
+         "expression": "(?P<dual5651>([가-힣]{1,10}[구군시도읍리면동가길리통][[:space:]]{0,2}){1,4}[가-힣\\d]{0,10}[[:space:]]{0,2}[1-9]{1}[0-9]{1,5}-?[0-9]{0,3}[[:space:]]{0,2}[가-힣\\d]{0,10})"
       },
       {
          "use": true,
          "type": "KoreanName",
          "description": "Profile name information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>[김이박][가-힣]{2})\""
+         "expression": "(?P<dual5651>[김이박][가-힣]{2})"
       },
       {
          "use": false,
          "type": "Ipv4Address",
          "description": "IP v4 address information",
          "level": "low",
-         "expression": "\"(?P<dual5651>(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})\""
+         "expression": "(?P<dual5651>(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)([\\.](25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})"
       },
       {
          "use": false,
@@ -152,112 +152,112 @@
          "description": "URL address information",
          "comment": "[\\w@?^=%&/~+#-]",
          "level": "low",
-         "expression": "\"(?P<dual5651>(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*))\""
+         "expression": "(?P<dual5651>(http|ftp|https)://([\\w_-]+(?:(?:[\\.][\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*))"
       },
       {
          "use": true,
          "type": "MacAddress",
          "description": "MAC address information",
          "level": "medium",
-         "expression": "\"(?P<dual5651>([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})\""
+         "expression": "(?P<dual5651>([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})"
       },
       {
          "use": false,
          "type": "AccessKeyType",
          "description": "Multi type potential access key information",
          "level": "info",
-         "expression": "\"(?P<dual5651>([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}))\""
+         "expression": "(?P<dual5651>([a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}))"
       },
       {
          "use": true,
          "type": "AWSSessionToken",
          "description": "AWS session token information",
          "level": "critical",
-         "expression": "\"(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=]))\""
+         "expression": "(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{16,}(?<![A-Za-z0-9/+=]))"
       },
       {
          "use": true,
          "type": "AWSAccessKey",
          "description": "AWS access key information",
          "level": "high",
-         "expression": "\"(?P<dual5651>AKIA[0-9A-Z]{16})\""
+         "expression": "(?P<dual5651>AKIA[0-9A-Z]{16})"
       },
       {
          "use": true,
          "type": "TencentSecretId",
          "description": "Tencent secret ID information",
          "level": "high",
-         "expression": "\"(?P<dual5651>AKID[A-Za-z0-9]{34})\""
+         "expression": "(?P<dual5651>AKID[A-Za-z0-9]{34})"
       },
       {
          "use": true,
          "type": "GoogleAPIToken",
          "description": "Google API token information",
          "level": "high",
-         "expression": "\"(?P<dual5651>AIza[0-9A-Za-z-_]{35})\""
+         "expression": "(?P<dual5651>AIza[0-9A-Za-z-_]{35})"
       },
       {
          "use": true,
          "type": "AWSSecretKey",
          "description": "AWS secret key information",
          "level": "critical",
-         "expression": "\"(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=]))\""
+         "expression": "(?P<dual5651>(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=]))"
       },
       {
          "use": false,
          "type": "PrivateSecureKey",
          "description": "Private secure key information",
          "level": "critical",
-         "expression": "\"(?P<dual5651>-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY)\""
+         "expression": "(?P<dual5651>-----BEGIN (EC|RSA|DSA|OPENSSH|PGP) PRIVATE KEY)"
       },
       {
          "use": true,
          "type": "AuthorizationBasic",
          "description": "Authorization basic information",
          "level": "high",
-         "expression": "\"(?P<dual5651>Basic[[:space:]][a-zA-Z0-9+\\/]+\\=*)\""
+         "expression": "(?P<dual5651>Basic[[:space:]][a-zA-Z0-9+\\/]+\\=*)"
       },
       {
          "use": true,
          "type": "AuthorizationBearer1",
          "description": "Authorization bearer information",
          "level": "high",
-         "expression": "\"(?P<dual5651>Bearer[[:space:]][\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})\""
+         "expression": "(?P<dual5651>Bearer[[:space:]][\\d|a-f]{8}-([\\d|a-f]{4}-){3}[\\d|a-f]{12})"
       },
       {
          "use": true,
          "type": "AuthorizationBearer2",
          "description": "Authorization bearer information",
          "level": "high",
-         "expression": "\"(?P<dual5651>Bearer[[:space:]][A-Za-z0-9\\-_=]+\\.[A-Za-z0-9\\-_=]+(\\.[A-Za-z0-9\\-_.+/=]+)?)\""
+         "expression": "(?P<dual5651>Bearer[[:space:]][A-Za-z0-9\\-_=]+[\\.][A-Za-z0-9\\-_=]+([\\.][A-Za-z0-9\\-_.+/=]+)?)"
       },
       {
          "use": true,
          "type": "AuthorizationAPI",
          "description": "Authorization API information",
          "level": "high",
-         "expression": "\"(?P<dual5651>api[key|[[:space:]]*]+[a-zA-Z0-9_\\-]+)\""
+         "expression": "(?P<dual5651>api[key|[[:space:]]*]+[a-zA-Z0-9_\\-]+)"
       },
       {
          "use": true,
          "type": "GoogleOAuthToken",
          "description": "Google OAuth token information",
          "level": "high",
-         "expression": "\"(?P<dual5651>ya29\\.[0-9A-Za-z\\\\-_]+)\""
+         "expression": "(?P<dual5651>ya29[\\.][0-9A-Za-z\\\\-_]+)"
       },
       {
          "use": true,
          "type": "GoogleOAuthKey",
          "description": "Google OAuth key information",
          "level": "high",
-         "expression": "\"(?P<dual5651>[0-9]+-[0-9A-Za-z_]{32}\\.apps\\.googleusercontent\\.com)\""
+         "expression": "(?P<dual5651>[0-9]+-[0-9A-Za-z_]{32}[\\.]apps[\\.]googleusercontent[\\.]com)"
       },
       {
          "use": true,
          "type": "FacebookAuthToken",
          "description": "Facebook Auth token information",
          "level": "high",
-         "expression": "\"(?P<dual5651>EAACEdEose0cBA[0-9A-Za-z]+)\""
+         "expression": "(?P<dual5651>EAACEdEose0cBA[0-9A-Za-z]+)"
       }
    ]
 }
