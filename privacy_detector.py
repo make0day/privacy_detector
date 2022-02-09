@@ -361,10 +361,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             else:
                 self._autoSendLogToSplunk = int(self._autoSendLogToSplunk)
             # Every 5 Mins
-            self._splunkSleep = int(self._callbacks.loadExtensionSetting("SplunkSleep"))
+            self._splunkSleep = self._callbacks.loadExtensionSetting("SplunkSleep")
             if self._splunkSleep == None:
                 self._callbacks.saveExtensionSetting("SplunkSleep", "5")
                 self._splunkSleep = 5
+            else:
+                self._splunkSleep = int(self._splunkSleep)
 
             # Splunk host
             self._splunkHost = self._callbacks.loadExtensionSetting("SplunkHost")
