@@ -1361,7 +1361,7 @@ class tableEventHandler(MouseListener):
         super(tableEventHandler, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     #
     # 
