@@ -1196,16 +1196,19 @@ class StartSendLogRunnable(Runnable):
         self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def run(self):
-        if self._extender._splunkHost == '' or self._extender._splunkAuthKey == '':
-            self.__stdout.println('[-] SplunkHost or Splunk auth key is null :(')
-        else: 
-            if self._extender._autoSendLogToSplunk == 2:
-                while self._extender._autoSendLogToSplunk == 2 and self._extender._stopThread == False:
+        try:
+            if self._extender._splunkHost == '' or self._extender._splunkAuthKey == '':
+                self.__stdout.println('[-] SplunkHost or Splunk auth key is null :(')
+            else: 
+                if self._extender._autoSendLogToSplunk == 2:
+                    while self._extender._autoSendLogToSplunk == 2 and self._extender._stopThread == False:
+                        self._extender.SendLog()
+                        #self.__stdout.println(''.join((["[+] Send log to Splunk server every ", str(self._extender._splunkSleep)," Minutes"])))
+                        Thread.sleep(1000 * 60 * self._extender._splunkSleep)
+                else:
                     self._extender.SendLog()
-                    #self.__stdout.println(''.join((["[+] Send log to Splunk server every ", str(self._extender._splunkSleep)," Minutes"])))
-                    Thread.sleep(1000 * 60 * self._extender._splunkSleep)
-            else:
-                self._extender.SendLog()
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 #
@@ -1266,10 +1269,13 @@ class StartParseFullHTTP(ActionListener):
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def actionPerformed(self, event):
-        dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?","Privacy Detector", JOptionPane.YES_NO_OPTION)
-        if dialog == JOptionPane.YES_OPTION:
-            if len(self._callbacks.getProxyHistory()) > 0:
-                self._extender.StartParseFullHTTP()
+        try:
+            dialog = JOptionPane.showConfirmDialog(self._extender._splitpane, "Are you sure want to perform ParseFullHistory?","Privacy Detector", JOptionPane.YES_NO_OPTION)
+            if dialog == JOptionPane.YES_OPTION:
+                if len(self._callbacks.getProxyHistory()) > 0:
+                    self._extender.StartParseFullHTTP()
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 #
@@ -1285,14 +1291,17 @@ class chkFindAllClicked(ItemListener):
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
-        if ItemEvent.getStateChange()==1:
-            if self._extender._scanningDepth == 2:
-                self._extender._scanningDepth = 1
+        try:
+            if ItemEvent.getStateChange()==1:
+                if self._extender._scanningDepth == 2:
+                    self._extender._scanningDepth = 1
+                else:
+                    self._extender._scanningDepth = 2
+                self._callbacks.saveExtensionSetting("ScanningDepth", str(self._extender._scanningDepth))
             else:
-                self._extender._scanningDepth = 2
-            self._callbacks.saveExtensionSetting("ScanningDepth", str(self._extender._scanningDepth))
-        else:
-            self._extender._scanningDepth = 1
+                self._extender._scanningDepth = 1
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 #
@@ -1308,14 +1317,17 @@ class chkCrawlBoxClicked(ItemListener):
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
-        if ItemEvent.getStateChange()==1:
-            if self._extender._callSpiderMan == 2:
-                self._extender._callSpiderMan = 1
+        try:
+            if ItemEvent.getStateChange()==1:
+                if self._extender._callSpiderMan == 2:
+                    self._extender._callSpiderMan = 1
+                else:
+                    self._extender._callSpiderMan = 2
+                self._callbacks.saveExtensionSetting("UseAutoCrawler", str(self._extender._callSpiderMan))
             else:
-                self._extender._callSpiderMan = 2
-            self._callbacks.saveExtensionSetting("UseAutoCrawler", str(self._extender._callSpiderMan))
-        else:
-            self._extender._callSpiderMan = 1
+                self._extender._callSpiderMan = 1
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 
@@ -1332,10 +1344,13 @@ class scanBoxClicked(ItemListener):
        # self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
-        if ItemEvent.getStateChange()==1:
-            self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
-            self._callbacks.saveExtensionSetting("SearchType", str(self._extender._scanningType))
-            #self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
+        try:
+            if ItemEvent.getStateChange()==1:
+                self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
+                self._callbacks.saveExtensionSetting("SearchType", str(self._extender._scanningType))
+                #self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
+        except Exception as e:
+            self.__stdout.println(e)
         return
 
 #
@@ -1351,17 +1366,21 @@ class chkTophitClicked(ItemListener):
         #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
-        if ItemEvent.getStateChange()==1:
-            if self._extender._updateTopList == 1:
-                self._extender._updateTopList = 2
-                #self._extender._topHitLogger.add(self._extender._topHitMap)
-            else: 
+        try:
+            if ItemEvent.getStateChange()==1:
+                if self._extender._updateTopList == 1:
+                    self._extender._updateTopList = 2
+                    #self._extender._topHitLogger.add(self._extender._topHitMap)
+                else: 
+                    self._extender._updateTopList = 1
+                    #self._extender._topHitLogger.remove(self._extender._topHitMap)
+                self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
+            else:
                 self._extender._updateTopList = 1
-                #self._extender._topHitLogger.remove(self._extender._topHitMap)
-            self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
-        else:
-            self._extender._updateTopList = 1
-        #self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
+            #self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
+
+        except Exception as e:
+            self.__stdout.println(e)
         return
 #
 # class to handle top list event
