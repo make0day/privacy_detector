@@ -128,19 +128,28 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
 
         TophitLabel = JLabel('  |  Top list : ')
         btnList.add(TophitLabel)
-        chkTophit = JCheckBox("Refresh", True)
+        CheckTopHit = False
+        if self._updateTopList == 2:
+            CheckTopHit == True
+        chkTophit = JCheckBox("Refresh", CheckTopHit)
         btnList.add(chkTophit)
         chkTophit.addItemListener(chkTophitClicked(self))
 
         OptionLabel = JLabel('  |  Search : ')
         btnList.add(OptionLabel)
-        chkFindAll = JCheckBox("Find All  | ", True)
+        FindAll = False
+        if self._scanningDepth == 2:
+            FindAll = True
+        chkFindAll = JCheckBox("Find All  | ", FindAll)
         btnList.add(chkFindAll)
         chkFindAll.addItemListener(chkFindAllClicked(self))
 
         CrawlLabel = JLabel(' Auto : ')
         btnList.add(CrawlLabel)
-        chkCrawlBox = JCheckBox("Use Crawler  | ", True)
+        callSpier = False
+        if self._callSpiderMan == 2:
+            callSpier = True
+        chkCrawlBox = JCheckBox("Use Crawler  | ", callSpier)
         btnList.add(chkCrawlBox)
         chkCrawlBox.addItemListener(chkCrawlBoxClicked(self))
 
@@ -152,7 +161,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
         vt.add('Deep Scan')
         vt.add('Full Scan')
         scanBox.setModel(DefaultComboBoxModel(vt))
-        scanBox.setSelectedIndex(1)
+        scanBox.setSelectedIndex(self._scanningType-1)
         btnList.add(scanBox)
         scanBox.addItemListener(scanBoxClicked(self))
 
@@ -318,6 +327,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             # 1 = Json Only Scan, 2 = Json,XML,Text,HTML Scan, 3 = Full Scan (Except images)
             self._scanningType = self._callbacks.loadExtensionSetting("SearchType")
             if self._scanningType == None:
+                self.__stdout.println("[-] SearchType None")
                 self._callbacks.saveExtensionSetting("SearchType", "2")
                 self._scanningType = 2
             else:
@@ -327,6 +337,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             # 1 = Find one item from the page, 1 > = Find all items
             self._scanningDepth = self._callbacks.loadExtensionSetting("ScanningDepth")
             if self._scanningDepth == None:
+                self.__stdout.println("[-] ScanningDepth None")
                 self._callbacks.saveExtensionSetting("ScanningDepth", "2")
                 self._scanningDepth = 2
             else:
@@ -336,6 +347,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             # 1 = Do not update top list, 2  = Update top list
             self._updateTopList = self._callbacks.loadExtensionSetting("RefreshTopList")
             if self._updateTopList == None:
+                self.__stdout.println("[-] RefreshTopList None")
                 self._callbacks.saveExtensionSetting("RefreshTopList", "2")
                 self._updateTopList = 2
             else:
@@ -345,13 +357,12 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             # 1 = Do not call SpiderMan, 2  = Call SpiderMan
             self._callSpiderMan = self._callbacks.loadExtensionSetting("UseAutoCrawler")
             if self._callSpiderMan == None:
+                self.__stdout.println("[-] UseAutoCrawler None")
                 self._callbacks.saveExtensionSetting("UseAutoCrawler", "2")
                 self._callSpiderMan = 2
             else:
                 self._callSpiderMan = int(self._callSpiderMan)
-            self.__stdout.println("[+] Use Auto Crawwer option : {}".format(self._callSpiderMan))
-            
-            self._callSpiderMan = 2
+            self.__stdout.println("[+] Use Auto Crawler option : {}".format(self._callSpiderMan))
 
             # 1 = Do not send log to the Splunk server, 2 = Send log to the Splunk server asynchronously
             self._autoSendLogToSplunk = self._callbacks.loadExtensionSetting("SplunkAutoSend")
@@ -1269,7 +1280,7 @@ class StartParseFullHTTP(ActionListener):
         super(StartParseFullHTTP, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def actionPerformed(self, event):
         try:
@@ -1291,7 +1302,7 @@ class chkFindAllClicked(ItemListener):
         super(chkFindAllClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         try:
@@ -1300,9 +1311,10 @@ class chkFindAllClicked(ItemListener):
                     self._extender._scanningDepth = 1
                 else:
                     self._extender._scanningDepth = 2
-                self._callbacks.saveExtensionSetting("ScanningDepth", str(self._extender._scanningDepth))
             else:
                 self._extender._scanningDepth = 1
+            self._callbacks.saveExtensionSetting("ScanningDepth", str(self._extender._scanningDepth))
+            self.__stdout.println("[+] Scanning Depth Option Channged = {}".format(self._extender._scanningDepth))
         except Exception as e:
             self.__stdout.println(e)
         return
@@ -1317,7 +1329,7 @@ class chkCrawlBoxClicked(ItemListener):
         super(chkCrawlBoxClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         try:
@@ -1326,9 +1338,10 @@ class chkCrawlBoxClicked(ItemListener):
                     self._extender._callSpiderMan = 1
                 else:
                     self._extender._callSpiderMan = 2
-                self._callbacks.saveExtensionSetting("UseAutoCrawler", str(self._extender._callSpiderMan))
             else:
                 self._extender._callSpiderMan = 1
+            self._callbacks.saveExtensionSetting("UseAutoCrawler", str(self._extender._callSpiderMan))
+            self.__stdout.println("[+] UseAutoCrawler Option Channged = {}".format(self._extender._callSpiderMan))
         except Exception as e:
             self.__stdout.println(e)
         return
@@ -1344,14 +1357,14 @@ class scanBoxClicked(ItemListener):
         super(scanBoxClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-       # self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         try:
             if ItemEvent.getStateChange()==1:
                 self._extender._scanningType = 1 + ItemEvent.getSource().getSelectedIndex()
                 self._callbacks.saveExtensionSetting("SearchType", str(self._extender._scanningType))
-                #self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
+                self.__stdout.println("[+] Scan Type Option Channged = {}".format(self._extender._scanningType))
         except Exception as e:
             self.__stdout.println(e)
         return
@@ -1366,7 +1379,7 @@ class chkTophitClicked(ItemListener):
         super(chkTophitClicked, self).__init__()
         self._extender = extender
         self._callbacks = self._extender._callbacks
-        #self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
+        self.__stdout = PrintWriter(self._callbacks.getStdout(), True)
 
     def itemStateChanged(self, ItemEvent):
         try:
@@ -1377,10 +1390,10 @@ class chkTophitClicked(ItemListener):
                 else: 
                     self._extender._updateTopList = 1
                     #self._extender._topHitLogger.remove(self._extender._topHitMap)
-                self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
             else:
                 self._extender._updateTopList = 1
-            #self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
+            self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
+            self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
 
         except Exception as e:
             self.__stdout.println(e)
