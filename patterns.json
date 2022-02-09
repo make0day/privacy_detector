@@ -140,7 +140,7 @@
          "expression": "\"(?P<dual5651>[김이박][가-힣]{2})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "Ipv4Address",
          "description": "IP v4 address information",
          "level": "low",
@@ -162,7 +162,7 @@
          "expression": "\"(?P<dual5651>([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})\""
       },
       {
-         "use": true,
+         "use": false,
          "type": "AccessKeyType",
          "description": "Multi type potential access key information",
          "level": "info",
