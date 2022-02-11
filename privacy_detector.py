@@ -1111,7 +1111,7 @@ class Table(JTable):
                      self._extender._responseViewer.setMessage(responseBody.encode('utf-8'), False)
                 else:
                     content_type = 'Content-Type: text/plain; charset=UTF-8\r\n'
-                    for header in re.getHeaders():
+                    for header in httpProxyItemResponse.getHeaders():
                         if header.lower().startswith("content-type:"):
                             content_type = header
                             break
