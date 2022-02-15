@@ -511,7 +511,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             #Todo : How to get scheme from URL object?
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             responseBody = normalize('NFC', responseBody).decode('utf-8')
-            self.__stdout.println(responseBody)
+            #self.__stdout.println(responseBody)
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
@@ -775,7 +775,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
-                    self.__stdout.println(httpProxyItemResponse)
+                    #self.__stdout.println(httpProxyItemResponse)
                     # Do not anything if http status code is one of error type
                     # 301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503
                     if httpProxyItemResponse.getStatusCode() not in [301, 302, 401, 402, 404, 411, 500]:
@@ -792,7 +792,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse()) #.decode('utf-8')
 
                             if responseBody == None:
-                                self.__stdout.println('Its possible??')
+                                #self.__stdout.println('Its possible??')
                                 return
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
