@@ -130,7 +130,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
         btnList.add(TophitLabel)
         CheckTopHit = False
         if self._updateTopList == 2:
-            CheckTopHit == True
+            CheckTopHit = True
         chkTophit = JCheckBox("Refresh", CheckTopHit)
         btnList.add(chkTophit)
         chkTophit.addItemListener(chkTophitClicked(self))
@@ -303,8 +303,8 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             self._topHitMap.getModel().removeAllElements()
             self._HitTablelock.release()
 
-            self._topHitTable.validate()
-            self._topHitTable.repaint()
+            #self._topHitTable.validate()
+            #self._topHitTable.repaint()
 
             self._responseViewer.setMessage('', False)
             self._currentlyDisplayedItem = ''
@@ -511,11 +511,11 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
             #Todo : How to get scheme from URL object?
             HostProtocol = "{}://{}:{}".format(Protocol,upart.host,upart.port)
             responseBody = normalize('NFC', responseBody).decode('utf-8')
-            #self.__stdout.println(responseBody)
+            self.__stdout.println(responseBody)
             for regex in self.__regexs.keys():
                 PIIType = self.__regexs.get(regex)
                 # Find just one element in the page
-                if self._scanningDepth == 1:
+                if self._scanningDepth == 1 and responseBody:
                     matchobj = regex.search(responseBody)
                     if matchobj != None:
                         #self.__stdout.println(matchobj.groups())
@@ -531,7 +531,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                             #self.__stdout.println("[-] error in PIIProcessor matchObj group(0) == None")
 
                 # Find all elements in the page
-                elif self._scanningDepth == 2:
+                elif self._scanningDepth == 2 and responseBody:
                     matchObj_iter = regex.finditer(responseBody)
                     if matchObj_iter != None:
                         for matchobj in matchObj_iter:
@@ -548,6 +548,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                                 #self.__stdout.println("[-] error in PIIProcessor matchObj group(0) == None")
 
         except Exception as e:
+            self.__stdout.println('error in PIIProcessor')
             self.__stdout.println(e)
 
         return IsPIIContaind
@@ -774,7 +775,7 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
 
                     # Get Response and analyze it
                     httpProxyItemResponse = self._helpers.analyzeResponse(messageInfo.getResponse())
-
+                    self.__stdout.println(httpProxyItemResponse)
                     # Do not anything if http status code is one of error type
                     # 301, 302, 307, 401, 402, 403, 404, 405, 406, 408, 411, 500, 502, 503
                     if httpProxyItemResponse.getStatusCode() not in [301, 302, 401, 402, 404, 411, 500]:
@@ -789,6 +790,10 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
                     
                             #Get the response body
                             responseBody = self._helpers.bytesToString(messageInfo.getResponse()) #.decode('utf-8')
+
+                            if responseBody == None:
+                                self.__stdout.println('Its possible??')
+                                return
 
                             if httpProxyItemResponse.getBodyOffset() != 0:
                                 responseBody = responseBody[httpProxyItemResponse.getBodyOffset():]
@@ -805,9 +810,27 @@ class BurpExtender(IBurpExtender, ITab, IHttpListener, IScannerListener, IScanne
 
 
         except Exception as e:
+            self.__stdout.println('error in processHttpMessage')
             self.__stdout.println(e)
 
         return
+
+    #
+    # implement IProxyListener
+    #
+
+    def processProxyMessage(self, messageIsRequest, message):
+        return
+        self.__stdout.println(
+                ("Proxy request to " if messageIsRequest else "Proxy response from ") +
+                message.getMessageInfo().getHttpService().toString())
+    #
+    #
+    #
+    def newScanIssue(self, issue):
+        return
+        self.__stdout.println("New scan issue: " + issue.getIssueName())
+        
 
     #
     #
@@ -1391,7 +1414,7 @@ class chkTophitClicked(ItemListener):
                     self._extender._updateTopList = 1
                     #self._extender._topHitLogger.remove(self._extender._topHitMap)
             else:
-                self._extender._updateTopList = 1
+                print('[-] nothing chnaged?')
             self._callbacks.saveExtensionSetting("RefreshTopList", str(self._extender._updateTopList))
             self.__stdout.println("[+] Top Hit Option Channged = {}".format(self._extender._updateTopList))
 
