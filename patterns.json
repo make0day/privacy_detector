@@ -46,7 +46,7 @@
          "type": "NationalInsuranceNumber",
          "description": "National insurance number information",
          "level": "high",
-         "expression": "(?P<dual5651>[1257][-~.[:space:]][0-9]{10})"
+         "expression": "(?P<dual5651>[1257][-~.[:space:][0-9]{10})"
       },
       {
          "use": true,
